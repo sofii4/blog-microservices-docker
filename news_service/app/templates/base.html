@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>{% block title %}Portal de Notícias{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="site-nav">
+        <div class="container nav-container">
+            {% if g.user_id %}
+                <span class="nav-user">Olá, {{ g.username }}!</span>
+            {% else %}
+                <span></span> 
+            {% endif %}
+
+            <div class="nav-actions">
+                {% if g.user_id %}
+                    <a href="{{ url_for('noticias.criar_noticia') }}" class="btn-nav">Cadastrar Notícia</a>
+                    
+                    <a href="/cadastro/logout" class="btn-nav-logout">Logout</a>
+                
+                {% else %}
+                    <a href="/cadastro/login" class="btn-nav">Login</a>
+                    <a href="/cadastro/register" class="btn-nav btn-highlight">Cadastre-se</a>
+                {% endif %}
+            </div> 
+        </div> 
+    </nav>
+
+    <header class="site-header">
+        <div class="container">
+            <h1>Blog de Notícias Diárias</h1>
+            <p class="lead">As últimas novidades do mundo da tecnologia, ciência, economia e cultura.</p>
+        </div>
+    </header>
+
+    <main class="container blog-container">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class=flashes style="max-width: 960px; width: 100%; margin-top: 1.5rem;">
+            {% for category, message in messages %}
+              <li class="{{ category }}" style="padding: 10px; margin-bottom: 10px; border-radius: 5px; list-style: none; font-family: 'Open Sans', sans-serif;">
+                {{ message }}
+              </li>
+            {% endfor %}
+            </div>
+
+            <style>
+                .flashes .success { background: #d4edda; color: #155724; }
+                .flashes .danger { background: #f8d7da; color: #721c24; }
+                .flashes .info { background: #cce5ff; color: #004085; }
+                .flashes .warning { background: #fff3cd; color: #856404; }
+            </style>
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 Blog de Notícias Diárias.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

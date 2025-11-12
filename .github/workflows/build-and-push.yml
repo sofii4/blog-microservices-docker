@@ -1,0 +1,46 @@
+
+name: CI/CD - Construir e Publicar Imagens Docker
+
+on:
+  push:
+    branches: [ "main" ] # Só roda na 'main'
+  pull_request:
+    branches: [ "main" ] 
+
+jobs:
+  build-and-push:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Passo 1: Baixar o código
+      - name: Fazer checkout do código
+        uses: actions/checkout@v4
+
+      # Passo 2: Configurar o Docker Buildx
+      - name: Configurar o Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Passo 3: Fazer login no Docker Hub
+      - name: Login no Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Passo 4: Construir e ENVIAR (Push) Imagem (Users Service)
+      - name: Construir e Publicar (Users Service)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./users_service
+          push: true 
+          tags: sofii4/blog-users-service:latest
+
+      # Passo 5: Construir e ENVIAR (Push) Imagem (News Service)
+      - name: Construir e Publicar (News Service)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./news_service
+          push: true
+          tags: sofii4/blog-news-service:latest
+          

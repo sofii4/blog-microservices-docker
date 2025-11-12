@@ -1,0 +1,20 @@
+# Framework principal
+Flask==3.0.3
+gunicorn==22.0.0
+
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+
+# Sessões (Para LER a sessão criada pelo users-service)
+Flask-Session==0.8.0
+redis==5.0.4
+
+# Para fazer a chamada de API interna para o users-service
+requests==2.32.3
+
+# Para imagem
+Pillow==10.4.0
+
+# Conector do Banco e Variáveis de Ambiente
+PyMySQL==1.1.1
+python-dotenv==1.0.1

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Notícia - Blog</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/create-news.css') }}">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="blog-container">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class=flashes style="max-width: 900px; width: 100%;">
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <h2 class="form-title">Cadastrar Nova Notícia</h2>
+            
+            <form method="post" enctype="multipart/form-data">
+                
+                <div class="form-group">
+                    <label for="titulo">Título:</label>
+                    <input type="text" name="titulo" id="titulo" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="conteudo">Conteúdo:</label>
+                    <textarea name="conteudo" id="conteudo" rows="10" class="form-control" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Imagem:</label>
+                    
+                    <input type="file" name="imagem" id="imagem_upload" class="file-input-hidden">
+                    
+                    <div style="margin-top: 0.5rem;"> <label for="imagem_upload" class="btn btn-file-upload">
+                            Escolher arquivo...
+                        </label>
+                        
+                        <span id="file-name-display">Nenhum arquivo selecionado</span>
+                    </div>
+                </div>
+                
+                <input type="submit" value="Salvar Notícia" class="btn btn-submit">
+                
+                <a href="{{ url_for('noticias.index') }}" class="btn btn-cancel">Cancelar</a>
+            </form>
+        </div>
+    
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 Blog de Notícias Diárias.</p>
+        </div>
+    </footer>
+
+    <script>
+        const realFileInput = document.getElementById('imagem_upload');
+        const fileNameDisplay = document.getElementById('file-name-display');
+        
+        realFileInput.addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : 'Nenhum arquivo selecionado';
+            
+            fileNameDisplay.textContent = fileName;
+        });
+    </script>
+
+</body>
+</html>

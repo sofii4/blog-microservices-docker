@@ -1,0 +1,152 @@
+
+# Para usar:
+# 1. Crie o .env (igual ao de desenvolvimento)
+# 2. Rode as migrações: docker compose -f docker-compose.prod.yml run --rm news-service flask db upgrade
+# 3. Rode as migrações: docker compose -f docker-compose.prod.yml run --rm users-service flask db upgrade
+# 4. Suba o stack:  docker compose -f docker-compose.prod.yml up -d
+
+services:
+  # PROXY REVERSO
+  traefik:
+    image: "traefik:v2.9"
+    container_name: "traefik_proxy"
+    restart: always
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80" # Porta 80 para produção
+      - "--providers.docker.network=proxy-net"
+    ports:
+      - "80:80"     # Mapeamento padrão de produção
+      - "8080:8080" # Dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - proxy-net
+
+  # APLICAÇÃO DE NOTÍCIAS (FLASK)
+  news-service:
+    image: sofii4/blog-news-service:latest # Baixa a imagem do Docker Hub
+    container_name: news_flask_service
+    restart: always
+    volumes:
+      - news_media_volume:/app/app/static/uploads 
+    expose:
+      - 8000
+    environment:
+      - MYSQL_DATABASE=noticias_db
+      - MYSQL_USER=noticias_user
+      - MYSQL_PASSWORD=${NEWS_DB_PASSWORD} 
+      - MYSQL_HOST=news-db
+      - FLASK_APP=run.py
+      - SECRET_KEY=${FLASK_SECRET_KEY} 
+      - SESSION_TYPE=redis
+      - SESSION_REDIS=redis://redis-sessions:6379/0
+    depends_on:
+      news-db:
+        condition: service_healthy
+      redis-sessions:
+        condition: service_started
+    networks:
+      - proxy-net
+    labels:
+      # Labels do Traefik 
+      - "traefik.enable=true"
+      - "traefik.http.routers.news-router.rule=Host(`localhost`) && PathPrefix(`/noticias`)"
+      - "traefik.http.routers.news-router.entrypoints=web" # Aponta para a porta 80
+      - "traefik.http.routers.news-router.service=news-service"
+      - "traefik.http.services.news-service.loadbalancer.server.port=8000"
+      - "traefik.http.routers.news-media-router.rule=Host (`localhost`) && PathPrefix(`/media`)"
+      - "traefik.http.routers.news-media-router.entrypoints=web"
+      - "traefik.http.routers.news-media-router.service=news-service"
+
+  # BANCO DE DADOS DO SERVIÇO NOTÍCIAS
+  news-db:
+    image: mariadb:10.6
+    container_name: noticias_mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'noticias_db'
+      MYSQL_USER: 'noticias_user'
+      MYSQL_PASSWORD: ${NEWS_DB_PASSWORD}   
+      MYSQL_ROOT_PASSWORD: ${NEWS_ROOT_PASSWORD}
+    volumes:
+      - news_db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "noticias_user", "-p${NEWS_DB_PASSWORD}" ] 
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy-net
+
+  # APLICAÇÃO DE USUÁRIOS (FLASK)
+  users-service:
+    image: sofii4/blog-users-service:latest # Baixa a imagem do Docker Hub
+    container_name: users_flask_service
+    restart: always
+    expose:
+      - 8000
+    environment:
+      - MYSQL_DATABASE=users_db
+      - MYSQL_USER=users_user
+      - MYSQL_PASSWORD=${USERS_DB_PASSWORD}
+      - MYSQL_HOST=users-db
+      - FLASK_APP=run.py
+      - SECRET_KEY=${FLASK_SECRET_KEY}
+      - SESSION_TYPE=redis
+      - SESSION_REDIS=redis://redis-sessions:6379/0
+    depends_on:
+      users-db:
+        condition: service_healthy
+      redis-sessions:
+        condition: service_started
+    networks:
+      - proxy-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.users-router.rule=Host(`localhost`) && PathPrefix(`/cadastro`)"
+      - "traefik.http.routers.users-router.entrypoints=web" # Aponta para a porta 80
+      - "traefik.http.routers.users-router.service=users-service"
+      - "traefik.http.services.users-service.loadbalancer.server.port=8000"
+
+  # BANCO DE DADOS DE USUÁRIOS
+  users-db:
+    image: mariadb:10.6
+    container_name: users_mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'users_db'
+      MYSQL_USER: 'users_user'
+      MYSQL_PASSWORD: ${USERS_DB_PASSWORD}  
+      MYSQL_ROOT_PASSWORD: ${USERS_ROOT_PASSWORD}
+    volumes:
+      - users_db_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "users_user", "-p${USERS_DB_PASSWORD}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy-net
+
+  # BANCO DE SESSÕES COMPARTILHADO
+  redis-sessions:
+    image: "redis:alpine"
+    container_name: redis_sessions_db
+    restart: always
+    expose:
+      - 6379
+    networks:
+      - proxy-net
+
+volumes:
+  news_db_data:
+  news_media_volume:
+  users_db_data:
+
+networks:
+  proxy-net:
+    driver: bridge
+    name: proxy-net

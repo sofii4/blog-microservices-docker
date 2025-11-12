@@ -1,0 +1,17 @@
+# Framework principal
+Flask==3.0.3
+gunicorn==22.0.0
+
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7  # Para migrações (substituto do "makemigrations")
+
+# Sessões (Substituto do django-redis)
+Flask-Session==0.8.0
+redis==5.0.4
+
+# Autenticação 
+Flask-Bcrypt==1.0.1
+
+# Conector do Banco e Variáveis de Ambiente
+PyMySQL==1.1.1
+python-dotenv==1.0.1

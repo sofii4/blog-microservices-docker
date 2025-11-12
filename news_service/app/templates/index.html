@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h2 class="blog-section-title">Destaques do Dia</h2>
+
+    {% for item in noticias_com_autor %}
+    <article class="news-item">
+        <div class="news-item-content">
+            
+            <div class="news-item-image-col">
+                {% if item.noticia.imagem %}
+                    <img src="{{ url_for('static', filename='uploads/' + item.noticia.imagem) }}" class="news-image" alt="{{ item.noticia.titulo }}">
+                {% else %}
+                    <img src="https://via.placeholder.com/300" class="news-image" alt="Sem imagem">
+                {% endif %}
+            </div>
+
+            <div class="news-item-text-col">
+                <h3 class="news-title"><a href="#">{{ item.noticia.titulo }}</a></h3>
+                
+                <p class="news-meta">
+                    Por <span class="author">{{ item.author_name }}</span> 
+                    em 
+                    {{ item.noticia.data_publicacao.strftime('%d/%m/%Y') }}
+                </p>
+                
+                <div class="news-excerpt content-formatted">{{ item.noticia.conteudo }}</div>
+                
+                {% if g.user_id == 1 or g.user_id == item.noticia.author_id %}
+                    <a href="{{ url_for('noticias.edit_noticia', noticia_id=item.noticia.id) }}" class="btn">Editar</a>
+                    <form action="{{ url_for('noticias.delete_noticia', noticia_id=item.noticia.id) }}" method="POST" style="display: inline; margin-left: 10px;">
+                        <input type="submit" value="Deletar" class="btn btn-delete" 
+                                onclick="return confirm('Tem certeza que deseja deletar este post?');">
+                    </form>
+                {% endif %}
+
+            </div>
+        </div>
+    </article>
+    
+    {% else %}
+    <p style="text-align: center;">Nenhuma notícia foi publicada ainda.</p>
+    {% endfor %}
+
+{% endblock %}

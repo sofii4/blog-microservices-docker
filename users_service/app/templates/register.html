@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar - Blog de Notícias</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="blog-container">
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class=flashes style="max-width: 750px; width: 100%;">
+            {% for category, message in messages %}
+              <li class="{{ category }}">{{ message }}</li>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <h2 class="form-title">Criar Conta</h2>
+            
+            <form method="post">
+                <div class="form-group">
+                    <label for="username">Usuário:</label>
+                    <input type="text" name="username" id="username" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" id="email" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Senha:</label>
+                    <input type="password" name="password" id="password" class="form-control" required>
+                </div>
+                
+                <input type="submit" value="Registrar" class="btn btn-submit">
+            </form>
+            
+            <p class="form-switch-link">
+                Já tem uma conta? <a href="{{ url_for('auth.login') }}">Faça o login</a>.
+            </p>
+        </div>
+    
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 Blog de Notícias Diárias.</p>
+        </div>
+    </footer>
+</body>
+</html>
