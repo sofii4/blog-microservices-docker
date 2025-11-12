@@ -1,6 +1,6 @@
 
 # Para usar:
-# 1. Crie o .env (igual ao de desenvolvimento)
+# 1. Crie o .env 
 # 2. Rode as migrações: docker compose -f docker-compose.prod.yml run --rm news-service flask db upgrade
 # 3. Rode as migrações: docker compose -f docker-compose.prod.yml run --rm users-service flask db upgrade
 # 4. Suba o stack:  docker compose -f docker-compose.prod.yml up -d

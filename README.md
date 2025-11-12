@@ -57,8 +57,8 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
 
 1.  **Clone o Repositório**
     ```bash
-    git clone [https://github.com/sofii4/blog-microservicos-flask.git](https://github.com/sofii4/blog-microservicos-flask.git)
-    cd blog-microservicos-flask
+    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
+    cd blog-microservices-docker
     ```
 
 2.  **Crie o Arquivo de Ambiente (`.env`)**
@@ -72,8 +72,8 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
     FLASK_SECRET_KEY=sua-chave-secreta-flask-super-forte-12345
 
     # Segredos para news-service
-    NEWS_DB_PASSWORD=Sophia866
-    NEWS_ROOT_PASSWORD=Sophia866
+    NEWS_DB_PASSWORD=SenhaForte123
+    NEWS_ROOT_PASSWORD=SenhaForte123
 
     # Segredos para users-service
     USERS_DB_PASSWORD=OutraSenhaForte123
@@ -103,8 +103,8 @@ Esse modo usa o `docker-compose.prod.yml`. Ele **não** constrói nada; ele **ba
 
 1.  **Clone o Repositório**
     ```bash
-    git clone [https://github.com/sofii4/blog-microservicos-flask.git](https://github.com/sofii4/blog-microservicos-flask.git)
-    cd blog-microservicos-flask
+    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
+    cd blog-microservices-docker
     ```
 
 2.  **Crie o Arquivo de Ambiente (`.env`)**
