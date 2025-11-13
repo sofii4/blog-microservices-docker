@@ -6,7 +6,7 @@ Este é um projeto de blog full-stack que implementa uma arquitetura de microser
 
 O sistema demonstra conceitos-chave de microserviços, incluindo um roteamento de requisições centralizado com um proxy reverso (Traefik), persistência de sessão compartilhada entre serviços usando Redis, e comunicação de serviço-para-serviço através de uma API REST interna (para buscar dados de autores).
 
-##  Automação (CI/CD) com GitHub Actions
+## Automação (CI/CD) com GitHub Actions
 
 O projeto está configurado com um pipeline de **Integração Contínua (CI)** e **Entrega Contínua (CD)** usando o GitHub Actions, localizado em `.github/workflows/build-and-push.yml`.
 
@@ -46,7 +46,7 @@ Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do
 * **Redis** (Para o cache de sessão compartilhado)
 
 
-##  Como Executar o Projeto
+## Como Executar o Projeto
 
 Esse projeto possui dois modos de execução: **Desenvolvimento** (modificar o código) e **Produção** (para rodar a aplicação em um servidor usando as imagens prontas).
 
@@ -88,6 +88,7 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
     NEWS_DB_NAME=news
     NEWS_DB_USERNAME=news_user
     NEWS_DB_PASSWORD=SenhaForte123
+    ```
 
 3.  **Construa e Inicie os Containers**
 
@@ -116,43 +117,41 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
     cd blog-microservices-docker
     ```
 
-2.  **Crie o Arquivo de Ambiente (`.env`)**
+2.  **Crie o Arquivo de Ambiente (`.env`)**
 
-    Siga o **"Passo 1"** da seção anterior para criar o arquivo `.env` **completo**. O arquivo de produção precisa de *todas* as variáveis (incluindo `USERS_DB_NAME`, `USERS_DB_USERNAME`, etc.) para que os bancos de dados iniciem corretamente.
+    Siga o **"Passo 1"** da seção anterior para criar o arquivo `.env` **completo**. O arquivo de produção precisa de *todas* as variáveis (incluindo `USERS_DB_NAME`, `USERS_DB_USERNAME`, etc.) para que os bancos de dados iniciem corretamente.
 
-3.  **Inicie os Containers (Produção)**
+3.  **Inicie os Containers (Produção)**
 
     Suba os containers:
     ```bash
     docker compose -f docker-compose.prod.yml up -d
     ```
+    *(O `-d` inicia em modo "detached", ou segundo plano).*
 
-    *(O `-d` inicia em modo "detached", ou segundo plano).*
+4.  **Passo Pós-Deploy: Corrigir Permissão de Upload**
 
-4.  **Passo Pós-Deploy: Corrigir Permissão de Upload**
+    O Docker cria o volume de uploads (`news_media_volume`) pertencendo ao usuário `root`. A aplicação Flask, por segurança, roda como `appuser` e não consegue escrever nesse volume (o que causa um "Erro 500" ao tentar cadastrar notícia).
 
-    O Docker cria o volume de uploads (`news_media_volume`) pertencendo ao usuário  `root`. A aplicação Flask, por segurança, roda como `appuser` e não consegue escrever nesse volume (o que causa um "Erro 500" ao tentar cadastrar notícia).
-
-    Execute o comando abaixo para dar a permissão da pasta para o `appuser`:
+    Execute o comando abaixo para dar a permissão da pasta para o `appuser`:
 
     ```bash
     docker compose -f docker-compose.prod.yml exec -u root news-service chown appuser:appuser /app/app/static/uploads
     ```
+    *Este comando só precisa ser executado **uma vez**.*
 
-    *Este comando só precisa ser executado **uma vez**.*
+5.  **Acesse a Aplicação (Produção)**
 
-5.  **Acesse a Aplicação (Produção)**
-
-    O modo de produção usa a porta 80 padrão:
-    * **Página Inicial (Notícias):** `http://localhost/noticias/`
-    * **Página de Cadastro:** `http://localhost/cadastro/register`
-    * **Dashboard do Traefik:** `http://localhost:8080/`
+    O modo de produção usa a porta 80 padrão:
+    * **Página Inicial (Notícias):** `http://localhost/noticias/`
+    * **Página de Cadastro:** `http://localhost/cadastro/register`
+    * **Dashboard do Traefik:** `http://localhost:8080/`
 
     (Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)
 
-6.  **Parando a Aplicação (Produção)**
+6.  **Parando a Aplicação (Produção)**
 
-    Para parar e remover os volumes:
+    Para parar e remover os volumes:
 
     ```bash
     docker compose -f docker-compose.prod.yml down --volumes
