@@ -131,13 +131,13 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
 
 4.  **Passo Pós-Deploy: Corrigir Permissão de Upload**
 
-    O Docker cria o volume de uploads (`news_media_volume`) pertencendo ao usuário `root`. A aplicação Flask, por segurança, roda como `appuser` e não consegue escrever nesse volume (o que causa um "Erro 500" ao tentar cadastrar notícia).
+    O Docker cria o volume de uploads (`news_media_volume`) pertencendo ao usuário  `root`. A aplicação Flask, por segurança, roda como `appuser` e não consegue escrever nesse volume (o que causa um "Erro 500" ao tentar cadastrar notícia).
 
     Execute o comando abaixo para dar a permissão da pasta para o `appuser`:
 
-    ```bash
-    docker compose -f docker-compose.prod.yml exec -u root news-service chown appuser:appuser /app/app/static/uploads
-    ```
+    ```bash
+    docker compose -f docker-compose.prod.yml exec -u root news-service chown appuser:appuser /app/app/static/uploads
+    ```
 
     *Este comando só precisa ser executado **uma vez**.*
 
@@ -148,11 +148,12 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
     * **Página de Cadastro:** `http://localhost/cadastro/register`
     * **Dashboard do Traefik:** `http://localhost:8080/`
 
-    *(Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)*
+    (Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)
 
 6.  **Parando a Aplicação (Produção)**
 
-    Para parar e remover os volumes (limpeza completa):
-    ```bash
-    docker compose -f docker-compose.prod.yml down --volumes
-    ```
+    Para parar e remover os volumes:
+
+    ```bash
+    docker compose -f docker-compose.prod.yml down --volumes
+    ```
