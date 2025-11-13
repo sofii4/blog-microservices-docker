@@ -45,7 +45,6 @@ Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do
 * **MariaDB** (Duas instâncias separadas)
 * **Redis** (Para o cache de sessão compartilhado)
 
----
 
 ##  Como Executar o Projeto
 
@@ -111,11 +110,11 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
 
 Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do Docker Hub (que o GitHub Actions criou).
 
-1.  **Clone o Repositório**
-    ```bash
-    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
-    cd blog-microservices-docker
-    ```
+1.  **Clone o Repositório**
+    ```bash
+    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
+    cd blog-microservices-docker
+    ```
 
 2.  **Crie o Arquivo de Ambiente (`.env`)**
 
@@ -123,11 +122,11 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
 
 3.  **Inicie os Containers (Produção)**
 
-    Suba os containers:
+    Suba os containers:
+    ```bash
+    docker compose -f docker-compose.prod.yml up -d
+    ```
 
-    ```bash
-    docker compose -f docker-compose.prod.yml up -d
-    ```
     *(O `-d` inicia em modo "detached", ou segundo plano).*
 
 4.  **Passo Pós-Deploy: Corrigir Permissão de Upload**
@@ -139,6 +138,7 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
     ```bash
     docker compose -f docker-compose.prod.yml exec -u root news-service chown appuser:appuser /app/app/static/uploads
     ```
+
     *Este comando só precisa ser executado **uma vez**.*
 
 5.  **Acesse a Aplicação (Produção)**
