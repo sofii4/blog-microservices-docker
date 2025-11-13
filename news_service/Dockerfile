@@ -27,5 +27,5 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
-# Comando para iniciar o servidor. 
+# Comando para iniciar o servidor.
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--reload", "run:app"]

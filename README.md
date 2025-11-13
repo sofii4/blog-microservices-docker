@@ -69,16 +69,26 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
     # Arquivo: .env 
 
     # Segredo do Flask
-    FLASK_SECRET_KEY=sua-chave-secreta-flask-super-forte-12345
+    FLASK_SECRET_KEY=uma-chave-secreta-muito-forte-e-dificil-de-adivinhar-123
 
-    # Segredos para news-service
-    NEWS_DB_PASSWORD=SenhaForte123
-    NEWS_ROOT_PASSWORD=SenhaForte123
-
-    # Segredos para users-service
-    USERS_DB_PASSWORD=OutraSenhaForte123
+    # Banco de Dados de Usuários
+    # (docker-compose.prod.yml)
     USERS_ROOT_PASSWORD=OutraSenhaForte123
-    ```
+    USERS_DB_NAME=users
+    USERS_DB_USERNAME=users_user
+    USERS_DB_PASSWORD=OutraSenhaForte123
+
+    # (docker-compose.yml de dev)
+    DB_USERNAME=users_user
+    DB_PASSWORD=OutraSenhaForte123
+    DB_NAME=users
+
+    # Banco de Dados de Notícias
+    # (docker-compose.prod.yml)
+    NEWS_ROOT_PASSWORD=SenhaForte123
+    NEWS_DB_NAME=news
+    NEWS_DB_USERNAME=news_user
+    NEWS_DB_PASSWORD=SenhaForte123
 
 3.  **Construa e Inicie os Containers**
 
@@ -97,45 +107,52 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
 5.  **Parando a Aplicação**
     Pressione `Ctrl+C` no terminal, ou (de outro terminal) rode `docker compose down`.
 
-### 2. Como Executar em Modo de Produção
+### Modo 2: Executar em Produção
 
-Esse modo usa o `docker-compose.prod.yml`. Ele **não** constrói nada; ele **baixa** as imagens prontas do Docker Hub (que o GitHub Actions criou).
+Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do Docker Hub (que o GitHub Actions criou).
 
-1.  **Clone o Repositório**
-    ```bash
-    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
-    cd blog-microservices-docker
-    ```
+1.  **Clone o Repositório**
+    ```bash
+    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
+    cd blog-microservices-docker
+    ```
 
-2.  **Crie o Arquivo de Ambiente (`.env`)**
+2.  **Crie o Arquivo de Ambiente (`.env`)**
 
-    Siga o **mesmo Passo 2** do modo de desenvolvimento. O arquivo de produção lê os mesmos segredos.
+    Siga o **"Passo 1"** da seção anterior para criar o arquivo `.env` **completo**. O arquivo de produção precisa de *todas* as variáveis (incluindo `USERS_DB_NAME`, `USERS_DB_USERNAME`, etc.) para que os bancos de dados iniciem corretamente.
 
-3.  **Execute as Migrações do Banco**
+3.  **Inicie os Containers (Produção)**
 
-    Como os bancos de dados estão vazios, precisamos criar as tabelas *antes* de ligar os apps. Usamos o comando `run` para isso:
+    Suba os containers:
 
-    ```bash
-    # (O -f aponta para o arquivo de produção)
-    docker compose -f docker-compose.prod.yml run --rm users-service flask db upgrade
-    docker compose -f docker-compose.prod.yml run --rm news-service flask db upgrade
-    ```
-    *(O `--rm` remove o container temporário após a execução).*
+    ```bash
+    docker compose -f docker-compose.prod.yml up -d
+    ```
+    *(O `-d` inicia em modo "detached", ou segundo plano).*
 
-4.  **Inicie os Containers (Produção)**
-    Agora, suba o stack completo em modo "detached" (`-d`):
-    ```bash
-    docker compose -f docker-compose.prod.yml up -d
-    ```
+4.  **Passo Pós-Deploy: Corrigir Permissão de Upload**
 
-5.  **Acesse a Aplicação (Produção)**
-    O modo de produção usa a porta 80 padrão:
-    * **Página de Registro:** `http://localhost/cadastro/register`
-    * **Página de Login:** `http://localhost/cadastro/login`
-    * **Página Inicial (Notícias):** `http://localhost/noticias/`
-    * **Dashboard do Traefik:** `http://localhost:8080/`
+    O Docker cria o volume de uploads (`news_media_volume`) pertencendo ao usuário `root`. A aplicação Flask, por segurança, roda como `appuser` e não consegue escrever nesse volume (o que causa um "Erro 500" ao tentar cadastrar notícia).
 
-6.  **Parando a Aplicação (Produção)**
-    ```bash
-    docker compose -f docker-compose.prod.yml down
-    ```
+    Execute o comando abaixo para dar a permissão da pasta para o `appuser`:
+
+    ```bash
+    docker compose -f docker-compose.prod.yml exec -u root news-service chown appuser:appuser /app/app/static/uploads
+    ```
+    *Este comando só precisa ser executado **uma vez**.*
+
+5.  **Acesse a Aplicação (Produção)**
+
+    O modo de produção usa a porta 80 padrão:
+    * **Página Inicial (Notícias):** `http://localhost/noticias/`
+    * **Página de Cadastro:** `http://localhost/cadastro/register`
+    * **Dashboard do Traefik:** `http://localhost:8080/`
+
+    *(Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)*
+
+6.  **Parando a Aplicação (Produção)**
+
+    Para parar e remover os volumes (limpeza completa):
+    ```bash
+    docker compose -f docker-compose.prod.yml down --volumes
+    ```
