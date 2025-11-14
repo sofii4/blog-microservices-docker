@@ -1,12 +1,9 @@
-
-# Para usar:
-# 1. Crie o .env 
-# 2. Rode as migrações: docker compose -f docker-compose.prod.yml run --rm news-service flask db upgrade
-# 3. Rode as migrações: docker compose -f docker-compose.prod.yml run --rm users-service flask db upgrade
-# 4. Suba o stack:  docker compose -f docker-compose.prod.yml up -d
+# MODO DE PRODUÇÃO
+# Baixa imagens do Docker Hub e roda na porta 80
+# Para usar, rode com: docker compose -f docker-compose.prod.yml up
 
 services:
-  # PROXY REVERSO
+  # TRAEFIK
   traefik:
     image: "traefik:v2.9"
     container_name: "traefik_proxy"
@@ -15,10 +12,10 @@ services:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80" # Porta 80 para produção
+      - "--entrypoints.web.address=:80" # <-- Porta 80
       - "--providers.docker.network=proxy-net"
     ports:
-      - "80:80"     # Mapeamento padrão de produção
+      - "8000:80" # <-- Porta de Produção
       - "8080:8080" # Dashboard
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -27,22 +24,25 @@ services:
 
   # APLICAÇÃO DE NOTÍCIAS (FLASK)
   news-service:
-    image: sofii4/blog-news-service:latest # Baixa a imagem do Docker Hub
+    image: sofii4/blog-news-service:latest # <-- Baixa do Hub
+    user: root
     container_name: news_flask_service
     restart: always
     volumes:
-      - news_media_volume:/app/app/static/uploads 
+      - news_media_volume:/app/app/static/uploads # <-- Apenas volume de dados
     expose:
       - 8000
     environment:
-      - MYSQL_DATABASE=noticias_db
-      - MYSQL_USER=noticias_user
-      - MYSQL_PASSWORD=${NEWS_DB_PASSWORD} 
+      # Lendo TUDO do .env
+      - MYSQL_DATABASE=${NEWS_DB_DATABASE}
+      - MYSQL_USER=${NEWS_DB_USER}
+      - MYSQL_PASSWORD=${NEWS_DB_PASSWORD}
       - MYSQL_HOST=news-db
-      - FLASK_APP=run.py
-      - SECRET_KEY=${FLASK_SECRET_KEY} 
-      - SESSION_TYPE=redis
-      - SESSION_REDIS=redis://redis-sessions:6379/0
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_DEBUG=${FLASK_DEBUG} # <-- Lido do .env (deve ser 0)
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_TYPE=${SESSION_TYPE}
+      - SESSION_REDIS=${SESSION_REDIS_URL}
     depends_on:
       news-db:
         condition: service_healthy
@@ -51,10 +51,9 @@ services:
     networks:
       - proxy-net
     labels:
-      # Labels do Traefik 
       - "traefik.enable=true"
       - "traefik.http.routers.news-router.rule=Host(`localhost`) && PathPrefix(`/noticias`)"
-      - "traefik.http.routers.news-router.entrypoints=web" # Aponta para a porta 80
+      - "traefik.http.routers.news-router.entrypoints=web"
       - "traefik.http.routers.news-router.service=news-service"
       - "traefik.http.services.news-service.loadbalancer.server.port=8000"
       - "traefik.http.routers.news-media-router.rule=Host (`localhost`) && PathPrefix(`/media`)"
@@ -67,36 +66,40 @@ services:
     container_name: noticias_mariadb
     restart: always
     environment:
-      MYSQL_DATABASE: 'noticias_db'
-      MYSQL_USER: 'noticias_user'
-      MYSQL_PASSWORD: ${NEWS_DB_PASSWORD}   
-      MYSQL_ROOT_PASSWORD: ${NEWS_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${NEWS_DB_DATABASE}
+      MYSQL_USER: ${NEWS_DB_USER}
+      MYSQL_PASSWORD: ${NEWS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${NEWS_DB_ROOT_PASSWORD} # <-- Corrigido
     volumes:
       - news_db_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "noticias_user", "-p${NEWS_DB_PASSWORD}" ] 
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "${NEWS_DB_USER}", "-p${NEWS_DB_PASSWORD}" ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+      start_interval: 5s
     networks:
       - proxy-net
 
   # APLICAÇÃO DE USUÁRIOS (FLASK)
   users-service:
-    image: sofii4/blog-users-service:latest # Baixa a imagem do Docker Hub
+    image: sofii4/blog-users-service:latest # <-- Baixa do Hub
     container_name: users_flask_service
     restart: always
     expose:
       - 8000
     environment:
-      - MYSQL_DATABASE=users_db
-      - MYSQL_USER=users_user
+      # Lendo TUDO do .env
+      - MYSQL_DATABASE=${USERS_DB_DATABASE}
+      - MYSQL_USER=${USERS_DB_USER}
       - MYSQL_PASSWORD=${USERS_DB_PASSWORD}
       - MYSQL_HOST=users-db
-      - FLASK_APP=run.py
-      - SECRET_KEY=${FLASK_SECRET_KEY}
-      - SESSION_TYPE=redis
-      - SESSION_REDIS=redis://redis-sessions:6379/0
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_DEBUG=${FLASK_DEBUG} # <-- Lido do .env (deve ser 0)
+      - SECRET_KEY=${SECRET_KEY}
+      - SESSION_TYPE=${SESSION_TYPE}
+      - SESSION_REDIS=${SESSION_REDIS_URL}
     depends_on:
       users-db:
         condition: service_healthy
@@ -107,7 +110,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.users-router.rule=Host(`localhost`) && PathPrefix(`/cadastro`)"
-      - "traefik.http.routers.users-router.entrypoints=web" # Aponta para a porta 80
+      - "traefik.http.routers.users-router.entrypoints=web"
       - "traefik.http.routers.users-router.service=users-service"
       - "traefik.http.services.users-service.loadbalancer.server.port=8000"
 
@@ -117,17 +120,19 @@ services:
     container_name: users_mariadb
     restart: always
     environment:
-      MYSQL_DATABASE: 'users_db'
-      MYSQL_USER: 'users_user'
-      MYSQL_PASSWORD: ${USERS_DB_PASSWORD}  
-      MYSQL_ROOT_PASSWORD: ${USERS_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${USERS_DB_DATABASE}
+      MYSQL_USER: ${USERS_DB_USER}
+      MYSQL_PASSWORD: ${USERS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${USERS_DB_ROOT_PASSWORD} # <-- Corrigido
     volumes:
       - users_db_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "users_user", "-p${USERS_DB_PASSWORD}" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "${USERS_DB_USER}", "-p${USERS_DB_PASSWORD}" ]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+      start_interval: 5s
     networks:
       - proxy-net
 
@@ -145,6 +150,7 @@ volumes:
   news_db_data:
   news_media_volume:
   users_db_data:
+
 
 networks:
   proxy-net:
