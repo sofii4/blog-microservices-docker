@@ -65,29 +65,26 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
     Crie um arquivo chamado `.env` na raiz do projeto. Este arquivo é **ignorado** pelo Git (`.gitignore`) e guarda seus segredos. Use o `.env.example` como modelo ou cole o conteúdo abaixo, substituindo as senhas:
 
     ```.env
-    # Arquivo: .env 
+    # Configuração do Flask (Mude DEBUG para 0 em produção)
+    FLASK_APP=run.py
+    FLASK_DEBUG=1
+    SECRET_KEY=sua-chave-secreta-flask-super-forte-12345
 
-    # Segredo do Flask
-    FLASK_SECRET_KEY=uma-chave-secreta-muito-forte-e-dificil-de-adivinhar-123
+    # Configuração do Redis
+    SESSION_TYPE=redis
+    SESSION_REDIS_URL=redis://redis-sessions:6379/0
 
-    # Banco de Dados de Usuários
-    # (docker-compose.prod.yml)
-    USERS_ROOT_PASSWORD=OutraSenhaForte123
-    USERS_DB_NAME=users
-    USERS_DB_USERNAME=users_user
-    USERS_DB_PASSWORD=OutraSenhaForte123
+    # --- Banco de Dados de Usuários ---
+    USERS_DB_ROOT_PASSWORD=SuaSenhaROOTSuperForte123
+    USERS_DB_DATABASE=users_db
+    USERS_DB_USER=users_user
+    USERS_DB_PASSWORD=SuaSenhaDeUsuarioForte456
 
-    # (docker-compose.yml de dev)
-    DB_USERNAME=users_user
-    DB_PASSWORD=OutraSenhaForte123
-    DB_NAME=users
-
-    # Banco de Dados de Notícias
-    # (docker-compose.prod.yml)
-    NEWS_ROOT_PASSWORD=SenhaForte123
-    NEWS_DB_NAME=news
-    NEWS_DB_USERNAME=news_user
-    NEWS_DB_PASSWORD=SenhaForte123
+    # --- Banco de Dados de Notícias ---
+    NEWS_DB_ROOT_PASSWORD=OutraSenhaROOTSuperForte789
+    NEWS_DB_DATABASE=noticias_db
+    NEWS_DB_USER=noticias_user
+    NEWS_DB_PASSWORD=OutraSenhaDeUsuarioForte101
     ```
 
 3.  **Construa e Inicie os Containers**
