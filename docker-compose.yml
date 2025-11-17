@@ -1,3 +1,7 @@
+# MODO DE DESENVOLVIMENTO
+# Constrói imagens localmente e usa hot-reload
+# Roda na porta 8000
+
 services:
   # TRAEFIK
   traefik:
@@ -33,19 +37,18 @@ services:
     expose:
       - 8000 #expõe a porta internamente, apenas para os serviços na mesma rede. 
     environment:
-      #variáveis de ambiente
       # Variáveis Banco de Dados 
-      - MYSQL_DATABASE=noticias_db
-      - MYSQL_USER=noticias_user
+      - MYSQL_DATABASE=${NEWS_DB_DATABASE}
+      - MYSQL_USER=${NEWS_DB_USER}
       - MYSQL_PASSWORD=${NEWS_DB_PASSWORD}
       - MYSQL_HOST=news-db #conecta ao host news-db (nome do serviço do banco de dados)
       # Variáveis Flask
-      - FLASK_APP=run.py
-      - FLASK_DEBUG=1
-      - SECRET_KEY=${FLASK_SECRET_KEY}
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_DEBUG=${FLASK_DEBUG} # <-- Lido do .env
+      - SECRET_KEY=${SECRET_KEY}
       # Variáveis Flask-Session (para conectar ao Redis)
-      - SESSION_TYPE=redis
-      - SESSION_REDIS=redis://redis-sessions:6379/0 #aponta para o serviço redis-sessions na porta 6379
+      - SESSION_TYPE=${SESSION_TYPE}
+      - SESSION_REDIS=${SESSION_REDIS_URL} #aponta para o serviço redis-sessions na porta 6379
     depends_on:
       #controla a ordem de inicialização 
       news-db:
@@ -73,16 +76,16 @@ services:
     container_name: noticias_mariadb
     restart: always #se o container parar, o docker reinicializa automaticamente
     environment:
-      #variáveis de ambiente (quando o container sobe, o banco de dados com usuário e senha é construído automaticamente)
-      MYSQL_DATABASE: 'noticias_db'
-      MYSQL_USER: 'noticias_user'
+      #variáveis de ambiente (lidas do .env)
+      MYSQL_DATABASE: ${NEWS_DB_DATABASE}
+      MYSQL_USER: ${NEWS_DB_USER}
       MYSQL_PASSWORD: ${NEWS_DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${NEWS_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${NEWS_DB_ROOT_PASSWORD}
     volumes:
       - news_db_data:/var/lib/mysql #mapeia o volume nomeado news_db_data para a pasta interna do MariaDB (dados persistidos)
     healthcheck:
       #define como o docker deve verificar se o banco está saudável
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "noticias_user", "-pSophia866" ] #testes 
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "${NEWS_DB_USER}", "-p${NEWS_DB_PASSWORD}" ] #testes 
       interval: 10s #executa a verificação a cada 10 segundos
       timeout: 5s #falha se demorar mais que 5 segundos
       retries: 5 #tenta 5 vezes antes de marcar unealthy
@@ -101,18 +104,17 @@ services:
     expose:
       - 8000 #expõe a porta internamente, apenas para os serviços na mesma rede. 
     environment:
-      # Variáveis do Banco de Dados 
-      - MYSQL_DATABASE=users_db
-      - MYSQL_USER=users_user
-      - MYSQL_PASSWORD= ${USERS_DB_PASSWORD}
+      - MYSQL_DATABASE=${USERS_DB_DATABASE}
+      - MYSQL_USER=${USERS_DB_USER}
+      - MYSQL_PASSWORD=${USERS_DB_PASSWORD}
       - MYSQL_HOST=users-db #conecta ao serviço users-db
       # Variáveis do Flask
-      - FLASK_APP=run.py
-      - FLASK_DEBUG=1
-      - SECRET_KEY= ${FLASK_SECRET_KEY}
+      - FLASK_APP=${FLASK_APP}
+      - FLASK_DEBUG=${FLASK_DEBUG} # <-- Lido do .env
+      - SECRET_KEY=${SECRET_KEY}
       # Variáveis do Flask-Session (para conectar ao Redis)
-      - SESSION_TYPE=redis
-      - SESSION_REDIS=redis://redis-sessions:6379/0 #aponta para o serviço redis-sessions na porta 6379
+      - SESSION_TYPE=${SESSION_TYPE}
+      - SESSION_REDIS=${SESSION_REDIS_URL} #aponta para o serviço redis-sessions na porta 6379
     depends_on:
       users-db:
         condition: service_healthy
@@ -135,14 +137,14 @@ services:
     container_name: users_mariadb
     restart: always
     environment:
-      MYSQL_DATABASE: 'users_db'
-      MYSQL_USER: 'users_user'
+      MYSQL_DATABASE: ${USERS_DB_DATABASE}
+      MYSQL_USER: ${USERS_DB_USER}
       MYSQL_PASSWORD: ${USERS_DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${USERS_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${USERS_DB_ROOT_PASSWORD}
     volumes:
       - users_db_data:/var/lib/mysql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "users_user", "-pOutraSenhaForte123" ]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "${USERS_DB_USER}", "-p${USERS_DB_PASSWORD}" ]
       interval: 10s
       timeout: 5s
       retries: 5
