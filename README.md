@@ -93,7 +93,6 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
     ```bash
     docker compose up --build
     ```
-    (Pode demorar alguns minutos para construir as imagens).
 
 4.  **Acesse a Aplicação (Desenvolvimento)**
     * **Página de Registro:** `http://localhost:8000/cadastro/register`
