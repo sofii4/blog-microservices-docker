@@ -2,11 +2,24 @@
 
 <img alt="Build Status" src="https://github.com/sofii4/blog-microservices-docker/actions/workflows/build-and-push.yml/badge.svg">
 
-Este é um projeto de blog full-stack que implementa uma arquitetura de microserviços completa, containerizada com Docker. A aplicação é dividida em dois serviços independentes: um `users-service` (para registro, login, autenticação e gerenciamento de identidade) e um `news-service` (para o CRUD de notícias).
+
+### Stack Principal 
+
+![Microservices](https://img.shields.io/badge/Architecture-Microservices-blue?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![CI/CD](https://img.shields.io/badge/CI/CD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Traefik](https://img.shields.io/badge/Proxy-Traefik-0D2232?style=for-the-badge&logo=traefikproxy&logoColor=white)
+![Redis](https://img.shields.io/badge/Cache-Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+
+---
+
+Este é um projeto full-stack que implementa uma arquitetura de microserviços completa, containerizada com Docker. A aplicação é dividida em dois serviços independentes: um `users-service` (para registro, login, autenticação e gerenciamento de identidade) e um `news-service` (para o CRUD de notícias).
 
 O sistema demonstra conceitos-chave de microserviços, incluindo um roteamento de requisições centralizado com um proxy reverso (Traefik), persistência de sessão compartilhada entre serviços usando Redis, e comunicação de serviço-para-serviço através de uma API REST interna (para buscar dados de autores).
 
-## Automação (CI/CD) com GitHub Actions
+## 🚀 Automação (CI/CD) com GitHub Actions
 
 O projeto está configurado com um pipeline de **Integração Contínua (CI)** e **Entrega Contínua (CD)** usando o GitHub Actions, localizado em `.github/workflows/build-and-push.yml`.
 
@@ -19,7 +32,7 @@ Esse workflow é disparado automaticamente a cada `push` para a branch `main` e 
 
 Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do código da branch `main`.
 
-## Funcionalidades
+## 🛠️ Funcionalidades
 
 * **Arquitetura de Microserviços:** Dois serviços Flask independentes (`users-service` e `news-service`).
 * **Autenticação de Usuário:** Registro e login completos, com senhas hasheadas (Bcrypt).
@@ -32,7 +45,7 @@ Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do
 * **API Interna:** O `news-service` consome uma API do `users-service` para buscar os nomes dos autores dos posts.
 * **100% Containerizado:** Toda a arquitetura (Traefik, 2x Flask, 2x MariaDB, 1x Redis) é orquestrada com Docker Compose.
 
-## Tecnologias Utilizadas
+## ⚙️ Tecnologias Utilizadas
 
 #### Back-end (Framework & Servidor)
 * **Python 3** / **Flask** / **Gunicorn**
@@ -46,11 +59,11 @@ Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do
 * **Redis** (Para o cache de sessão compartilhado)
 
 
-## Como Executar o Projeto
+## 🔌Como Executar o Projeto
 
 Esse projeto possui dois modos de execução: **Desenvolvimento** (modificar o código) e **Produção** (para rodar a aplicação em um servidor usando as imagens prontas).
 
-### 1. Como Executar em Modo de Desenvolvimento
+### 1.  Modo de Desenvolvimento
 
 Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens localmente e usa "hot-reload" (reinicia o app quando você salva o código).
 
@@ -103,7 +116,7 @@ Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens local
 5.  **Parando a Aplicação**
     Pressione `Ctrl+C` no terminal, ou (de outro terminal) rode `docker compose down`.
 
-### Modo 2: Executar em Produção
+### 2.  Modo de Produção
 
 Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do Docker Hub (que o GitHub Actions criou).
 
@@ -125,18 +138,8 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
     ```
     *(O `-d` inicia em modo "detached", ou segundo plano).*
 
-4.  **Passo Pós-Deploy: Corrigir Permissão de Upload**
 
-    O Docker cria o volume de uploads (`news_media_volume`) pertencendo ao usuário `root`. A aplicação Flask, por segurança, roda como `appuser` e não consegue escrever nesse volume (o que causa um "Erro 500" ao tentar cadastrar notícia).
-
-    Execute o comando abaixo para dar a permissão da pasta para o `appuser`:
-
-    ```bash
-    docker compose -f docker-compose.prod.yml exec -u root news-service chown appuser:appuser /app/app/static/uploads
-    ```
-    *Este comando só precisa ser executado **uma vez**.*
-
-5.  **Acesse a Aplicação (Produção)**
+4.  **Acesse a Aplicação (Produção)**
 
     O modo de produção usa a porta 80 padrão:
     * **Página Inicial (Notícias):** `http://localhost/noticias/`
@@ -145,7 +148,7 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
 
     (Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)
 
-6.  **Parando a Aplicação (Produção)**
+5.  **Parando a Aplicação (Produção)**
 
     Para parar e remover os volumes:
 
