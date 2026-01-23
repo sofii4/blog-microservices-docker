@@ -16,5 +16,5 @@ requests==2.32.4
 Pillow==10.4.0
 
 # Conector do Banco e Variáveis de Ambiente
-PyMySQL==1.1.1
+PyMySQL==1.1.2
 python-dotenv==1.0.1
