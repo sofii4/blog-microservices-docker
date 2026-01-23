@@ -10,7 +10,7 @@ Flask-Session==0.8.0
 redis==5.0.4
 
 # Para fazer a chamada de API interna para o users-service
-requests==2.32.4
+requests==2.32.5
 
 # Para imagem
 Pillow==12.1.0
