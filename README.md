@@ -29,6 +29,12 @@ Esse workflow é disparado automaticamente a cada `push` para a branch `main` e 
 2.  **CD (Entrega/Publicação):** Se os builds forem bem-sucedidos, o workflow faz login no Docker Hub e publica as novas imagens prontas para produção:
     * `sofii4/blog-news-service:latest`
     * `sofii4/blog-users-service:latest`
+  
+### 🛡️ Segurança e Manutenção Automática
+Para manter os microsserviços protegidos contra vulnerabilidades:
+
+* **Dependabot Alerts:** Monitoramento 24/7 de vulnerabilidades em bibliotecas Python e imagens base Docker.
+* **Atualizações Semanais:** O Dependabot verifica semanalmente se existem versões mais recentes das dependências e abre Pull Requests automaticamente.
 
 Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do código da branch `main`.
 
