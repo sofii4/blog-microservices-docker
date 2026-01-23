@@ -3,7 +3,7 @@ Flask==3.0.3
 gunicorn==22.0.0
 
 Flask-SQLAlchemy==3.1.1
-Flask-Migrate==4.0.7  # Para migrações (substituto do "makemigrations")
+Flask-Migrate==4.1.0  # Para migrações (substituto do "makemigrations")
 
 # Sessões (Substituto do django-redis)
 Flask-Session==0.8.0
