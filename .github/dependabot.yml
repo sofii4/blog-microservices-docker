@@ -5,7 +5,38 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # 1. Dependências Python do Users Service
+  - package-ecosystem: "pip"
+    directory: "/users-service"
     schedule:
       interval: "weekly"
+    groups:
+      python-dependencies: # Nome do grupo
+        patterns:
+          - "*" # Agrupa todas as bibliotecas num só PR
+        update-types:
+          - "minor"
+          - "patch"
+
+  # 2. Dependências Python do News Service
+  - package-ecosystem: "pip"
+    directory: "/news-service"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # 3. Imagens Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      docker-dependencies:
+        patterns:
+          - "*"
