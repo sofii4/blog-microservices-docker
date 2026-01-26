@@ -5,38 +5,32 @@
 
 version: 2
 updates:
-  # 1. Dependências Python do Users Service
+  # Python - Users Service
   - package-ecosystem: "pip"
     directory: "/users_service"
     schedule:
       interval: "weekly"
     groups:
-      python-dependencies: # Nome do grupo
-        patterns:
-          - "*" # Agrupa todas as bibliotecas num só PR
-        update-types:
-          - "minor"
-          - "patch"
+      python-deps:
+        patterns: ["*"]
 
-  # 2. Dependências Python do News Service
+  # Python - News Service
   - package-ecosystem: "pip"
     directory: "/news_service"
     schedule:
       interval: "weekly"
     groups:
-      python-dependencies:
-        patterns:
-          - "*"
-        update-types:
-          - "minor"
-          - "patch"
+      python-deps:
+        patterns: ["*"]
 
-  # 3. Imagens Docker
+  # Docker - Users Service (Onde estava o erro)
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/users_service"
     schedule:
       interval: "weekly"
-    groups:
-      docker-dependencies:
-        patterns:
-          - "*"
+
+  # Docker - News Service (Onde estava o erro)
+  - package-ecosystem: "docker"
+    directory: "/news_service"
+    schedule:
+      interval: "weekly"
