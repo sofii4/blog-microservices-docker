@@ -7,7 +7,7 @@ version: 2
 updates:
   # 1. Dependências Python do Users Service
   - package-ecosystem: "pip"
-    directory: "/users-service"
+    directory: "/users_service"
     schedule:
       interval: "weekly"
     groups:
@@ -20,7 +20,7 @@ updates:
 
   # 2. Dependências Python do News Service
   - package-ecosystem: "pip"
-    directory: "/news-service"
+    directory: "/news_service"
     schedule:
       interval: "weekly"
     groups:
