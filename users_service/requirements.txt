@@ -7,7 +7,7 @@ Flask-Migrate==4.1.0  # Para migrações (substituto do "makemigrations")
 
 # Sessões (Substituto do django-redis)
 Flask-Session==0.8.0
-redis==5.0.4
+redis==7.1.0
 
 # Autenticação 
 Flask-Bcrypt==1.0.1
