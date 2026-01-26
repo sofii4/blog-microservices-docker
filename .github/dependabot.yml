@@ -2,35 +2,36 @@
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 version: 2
 updates:
-  # Python - Users Service
   - package-ecosystem: "pip"
     directory: "/users_service"
     schedule:
       interval: "weekly"
     groups:
-      python-deps:
+      python-updates: # Mesmo nome de grupo para todos!
         patterns: ["*"]
 
-  # Python - News Service
   - package-ecosystem: "pip"
     directory: "/news_service"
     schedule:
       interval: "weekly"
     groups:
-      python-deps:
+      python-updates: # Mesmo nome de grupo aqui também!
         patterns: ["*"]
 
-  # Docker - Users Service (Onde estava o erro)
   - package-ecosystem: "docker"
     directory: "/users_service"
     schedule:
       interval: "weekly"
+    groups:
+      infra-updates:
+        patterns: ["*"]
 
-  # Docker - News Service (Onde estava o erro)
   - package-ecosystem: "docker"
     directory: "/news_service"
     schedule:
       interval: "weekly"
+    groups:
+      infra-updates:
+        patterns: ["*"]
