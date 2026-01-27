@@ -5,11 +5,10 @@
 services:
   # TRAEFIK
   traefik:
-    image: "traefik:v2.11"  # Voltando para a versão "tanque de guerra"
-    container_name: "traefik_proxy_legacy" # Nome novo para garantir recriação
+    image: "traefik:v2.11"
+    container_name: "traefik_proxy_legacy"
     restart: always
     environment:
-      # Mantemos a variável, a v2 costuma respeitar melhor
       - DOCKER_API_VERSION=1.44
     command:
       - "--api.insecure=true"
@@ -24,7 +23,6 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - proxy-net
-    # Adicionamos isto para tentar furar bloqueios de segurança (AppArmor/SELinux)
     security_opt:
       - "label:disable"
 
@@ -99,7 +97,6 @@ services:
 
   # APLICAÇÃO DE USUÁRIOS (FLASK)
   users-service:
-    #IGUAL O news-service SÓ MUDA AS VARIÁVEIS
     build: ./users_service #constrói uma imagem nova do zero a partir do dockerfile contido na pasta ./users_service
     container_name: users_flask_service
     restart: always #se o container parar, o docker reinicializa automaticamente
@@ -130,22 +127,14 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy-net"
-      
-      # ROTA DE CADASTRO: Aceita /cadastro e entrega /cadastro
       - "traefik.http.routers.users-router.rule=PathPrefix(`/cadastro`)"
       - "traefik.http.routers.users-router.entrypoints=web"
-      # REMOVIDO: Middlewares de strip
-
-      # IMPORTANTE: Você precisa de uma rota pro Traefik enxergar a API também!
-      # Adicionei isso aqui para sua API interna funcionar:
       - "traefik.http.routers.users-api-router.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.users-api-router.entrypoints=web"
-      
       - "traefik.http.services.users-service.loadbalancer.server.port=8000"
 
   # BANCO DE DADOS DE USUÁRIOS
   users-db:
-    #IGUAL O news-db SÓ MUDA AS VARIÁVEIS
     image: mariadb:10.6
     container_name: users_mariadb
     restart: always
@@ -175,7 +164,6 @@ services:
       - proxy-net
 
 volumes:
-  #decalra os volumes nomeados que utilizamos, Docker armazena eles em um local separado e os gerencia.
   news_db_data:
   news_media_volume:
   users_db_data:

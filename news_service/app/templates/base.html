@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Isso é essencial para o botão funcionar
+            darkMode: 'class', 
             theme: {
                 extend: {
                     fontFamily: {
@@ -23,7 +23,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
-        // Checa preferência salva antes de carregar o corpo (evita piscada branca)
+        // Checa preferência salva antes de carregar o corpo 
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -135,7 +135,6 @@
         var darkIcon = document.getElementById('theme-toggle-dark-icon');
         var lightIcon = document.getElementById('theme-toggle-light-icon');
 
-        // Mostra o ícone correto ao carregar
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             lightIcon.classList.remove('hidden');
         } else {
@@ -143,11 +142,9 @@
         }
 
         themeToggleBtn.addEventListener('click', function () {
-            // Alterna os ícones
             darkIcon.classList.toggle('hidden');
             lightIcon.classList.toggle('hidden');
 
-            // Se tiver setado via localstorage
             if (localStorage.getItem('color-theme')) {
                 if (localStorage.getItem('color-theme') === 'light') {
                     document.documentElement.classList.add('dark');
@@ -157,7 +154,6 @@
                     localStorage.setItem('color-theme', 'light');
                 }
             } else {
-                // Se NÃO tiver no localstorage (primeira vez)
                 if (document.documentElement.classList.contains('dark')) {
                     document.documentElement.classList.remove('dark');
                     localStorage.setItem('color-theme', 'light');

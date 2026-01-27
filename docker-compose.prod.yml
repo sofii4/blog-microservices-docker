@@ -17,7 +17,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--log.level=DEBUG"
     ports:
-      - "8000:80"       # Agora mapeado para a porta 80 real de produção
+      - "8000:80"
       - "8080:8080"   # Dashboard
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
@@ -113,7 +113,7 @@ services:
       # Rota Cadastro
       - "traefik.http.routers.users-router.rule=PathPrefix(`/cadastro`)"
       - "traefik.http.routers.users-router.entrypoints=web"
-      # Rota API (Essencial para o login funcionar entre serviços)
+      # Rota API 
       - "traefik.http.routers.users-api-router.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.users-api-router.entrypoints=web"
       - "traefik.http.services.users-service.loadbalancer.server.port=8000"

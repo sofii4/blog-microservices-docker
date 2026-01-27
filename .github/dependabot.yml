@@ -9,7 +9,7 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      python-updates: # Mesmo nome de grupo para todos!
+      python-updates: 
         patterns: ["*"]
 
   - package-ecosystem: "pip"
@@ -17,7 +17,7 @@ updates:
     schedule:
       interval: "weekly"
     groups:
-      python-updates: # Mesmo nome de grupo aqui também!
+      python-updates: 
         patterns: ["*"]
 
   - package-ecosystem: "docker"

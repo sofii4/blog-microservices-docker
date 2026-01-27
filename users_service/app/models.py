@@ -29,5 +29,4 @@ class User(db.Model):
         return bcrypt.check_password_hash(self.password_hash, password)
 
     def __repr__(self):
-        # facilita o debug
         return f'<User {self.username}>'
