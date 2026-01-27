@@ -1,62 +1,53 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrar - Blog de Notícias</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-</head>
-<body>
-    <main class="blog-container">
-        
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div class=flashes style="max-width: 750px; width: 100%;">
-            {% for category, message in messages %}
-              <li class="{{ category }}">{{ message }}</li>
-            {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
+{% extends 'base.html' %}
 
-        <div class="form-container">
-            <h2 class="form-title">Criar Conta</h2>
-            
-            <form method="post">
-                <div class="form-group">
-                    <label for="username">Usuário:</label>
-                    <input type="text" name="username" id="username" class="form-control" required>
+{% block title %}Criar Conta - BlogNews{% endblock %}
+
+{% block content %}
+<div class="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Crie sua conta</h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Já tem uma conta?
+            <a href="/cadastro/login" class="font-medium text-indigo-600 hover:text-indigo-500">Faça login</a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-200">
+            <form class="space-y-6" action="#" method="POST">
+
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Nome de Usuário</label>
+                    <div class="mt-1">
+                        <input id="username" name="username" type="text" required
+                            class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" name="email" id="email" class="form-control" required>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <div class="mt-1">
+                        <input id="email" name="email" type="email" required
+                            class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="password">Senha:</label>
-                    <input type="password" name="password" id="password" class="form-control" required>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+                    <div class="mt-1">
+                        <input id="password" name="password" type="password" required
+                            class="block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm">
+                    </div>
                 </div>
-                
-                <input type="submit" value="Registrar" class="btn btn-submit">
+
+                <div>
+                    <button type="submit"
+                        class="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">
+                        Cadastrar
+                    </button>
+                </div>
             </form>
-            
-            <p class="form-switch-link">
-                Já tem uma conta? <a href="{{ url_for('auth.login') }}">Faça o login</a>.
-            </p>
         </div>
-    
-    </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2025 Blog de Notícias Diárias.</p>
-        </div>
-    </footer>
-</body>
-</html>
+    </div>
+</div>
+{% endblock %}

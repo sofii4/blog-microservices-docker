@@ -64,17 +64,15 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=proxy-net"
       
-      # ROTA PRINCIPAL: Aceita /noticias, e entrega /noticias (sem cortar nada)
+      # ROTA PRINCIPAL: /noticias
       - "traefik.http.routers.news-router.rule=PathPrefix(`/noticias`)"
       - "traefik.http.routers.news-router.entrypoints=web"
-      # REMOVIDO: Middlewares de strip (não precisamos mais deles)
       
-      # ROTA DE MÍDIA: Essa a gente MANTÉM o strip, porque a pasta no disco não chama "media"
+      # ROTA DE MÍDIA: /media
+      # IMPORTANTE: Não usamos 'strip' aqui. O Python espera receber '/media'
       - "traefik.http.routers.news-media-router.rule=PathPrefix(`/media`)"
       - "traefik.http.routers.news-media-router.entrypoints=web"
-      - "traefik.http.middlewares.media-strip.stripprefix.prefixes=/media"
-      - "traefik.http.routers.news-media-router.middlewares=media-strip"
-
+      
       - "traefik.http.services.news-service.loadbalancer.server.port=8000"
 
   # BANCO DE DADOS DO SERVIÇO NOTÍCIAS 

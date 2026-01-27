@@ -1,5 +1,6 @@
 
 import os 
+from flask import Flask, send_from_directory
 from flask import Flask
 from .config import Config
 from flask_sqlalchemy import SQLAlchemy
@@ -45,5 +46,10 @@ def create_app(config_class=Config):
 
         # Cria as tabelas do banco
         db.create_all()
+
+    # Essa rota atende quando o Traefik manda algo para /media/...
+    @app.route('/media/<path:filename>')
+    def media(filename):
+        return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
     return app

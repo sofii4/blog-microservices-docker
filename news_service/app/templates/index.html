@@ -1,46 +1,134 @@
 {% extends 'base.html' %}
 
+{% block title %}Feed de Notícias{% endblock %}
+
 {% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-10 border-b pb-6">
+        <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Feed</h1>
+        {% if g.user_id %}
+        <a href="/noticias/criar"
+            class="bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 transition-all shadow-sm font-medium">
+            + Escrever Post
+        </a>
+        {% endif %}
+    </div>
 
-    <h2 class="blog-section-title">Destaques do Dia</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {% for item in (noticias_com_autor or noticias) %}
 
-    {% for item in noticias_com_autor %}
-    <article class="news-item">
-        <div class="news-item-content">
-            
-            <div class="news-item-image-col">
-                {% if item.noticia.imagem %}
-                    <img src="{{ url_for('static', filename='uploads/' + item.noticia.imagem) }}" class="news-image" alt="{{ item.noticia.titulo }}">
+        {% if item.noticia %}
+        {% set post = item.noticia %}
+        {% set autor = item.author_name %}
+        {% else %}
+        {% set post = item %}
+        {% set autor = "Usuário" %}
+        {% endif %}
+
+        <article
+            class="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-full hover:shadow-md transition-all duration-300">
+
+            <div class="h-48 bg-gray-50 relative overflow-hidden">
+                {% if post.imagem %}
+                <img src="/media/{{ post.imagem }}"
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                 {% else %}
-                    <img src="https://via.placeholder.com/300" class="news-image" alt="Sem imagem">
+                <div class="w-full h-full flex items-center justify-center text-4xl bg-indigo-50">📰</div>
                 {% endif %}
+                <div
+                    class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-indigo-600 shadow-sm">
+                    @{{ autor }}
+                </div>
             </div>
 
-            <div class="news-item-text-col">
-                <h3 class="news-title"><a href="#">{{ item.noticia.titulo }}</a></h3>
-                
-                <p class="news-meta">
-                    Por <span class="author">{{ item.author_name }}</span> 
-                    em 
-                    {{ item.noticia.data_publicacao.strftime('%d/%m/%Y') }}
+            <div class="p-6 flex-grow flex flex-col">
+                <span class="text-xs text-gray-400 mb-2">{{ post.data_publicacao.strftime('%d/%m/%Y') }}</span>
+
+                <h2 class="text-xl font-bold text-gray-900 mb-3 leading-tight cursor-pointer hover:text-indigo-600 transition-colors"
+                    data-titulo="{{ post.titulo }}" data-conteudo="{{ post.conteudo }}" data-autor="{{ autor }}"
+                    data-imagem="{{ post.imagem or '' }}" onclick="abrirModal(this)">
+                    {{ post.titulo }}
+                </h2>
+
+                <p class="text-gray-600 text-sm mb-6 line-clamp-3">
+                    {{ post.conteudo }}
                 </p>
-                
-                <div class="news-excerpt content-formatted">{{ item.noticia.conteudo }}</div>
-                
-                {% if g.user_id == 1 or g.user_id == item.noticia.author_id %}
-                    <a href="{{ url_for('noticias.edit_noticia', noticia_id=item.noticia.id) }}" class="btn">Editar</a>
-                    <form action="{{ url_for('noticias.delete_noticia', noticia_id=item.noticia.id) }}" method="POST" style="display: inline; margin-left: 10px;">
-                        <input type="submit" value="Deletar" class="btn btn-delete" 
-                                onclick="return confirm('Tem certeza que deseja deletar este post?');">
+
+                {% if g.user_id == post.author_id or g.user_id == 1 %}
+                <div
+                    class="mt-auto pt-4 border-t border-gray-50 flex justify-end space-x-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <a href="{{ url_for('noticias.edit_noticia', noticia_id=post.id) }}"
+                        class="text-xs font-bold text-gray-400 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                        ✏️ Editar
+                    </a>
+                    <form action="{{ url_for('noticias.delete_noticia', noticia_id=post.id) }}" method="post"
+                        onsubmit="return confirm('Excluir esta notícia?');" class="inline">
+                        <button type="submit"
+                            class="text-xs font-bold text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1">
+                            🗑️ Excluir
+                        </button>
                     </form>
+                </div>
                 {% endif %}
-
             </div>
-        </div>
-    </article>
-    
-    {% else %}
-    <p style="text-align: center;">Nenhuma notícia foi publicada ainda.</p>
-    {% endfor %}
+        </article>
+        {% endfor %}
+    </div>
+</div>
 
+<div id="modalNoticia" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm" onclick="fecharModal()"></div>
+    <div
+        class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative z-10 shadow-2xl transition-all">
+        <div id="modalImgContainer" class="h-64 hidden">
+            <img id="modalImg" src="" class="w-full h-full object-cover">
+        </div>
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <span id="modalAut"
+                    class="bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold"></span>
+                <button onclick="fecharModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+            <h2 id="modalTit" class="text-3xl font-bold text-gray-900 mb-6 leading-tight"></h2>
+            <div id="modalCont" class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg text-justify"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModal(elemento) {
+        const titulo = elemento.getAttribute('data-titulo');
+        const conteudo = elemento.getAttribute('data-conteudo');
+        const autor = elemento.getAttribute('data-autor');
+        const imagem = elemento.getAttribute('data-imagem');
+
+        document.getElementById('modalTit').innerText = titulo;
+        document.getElementById('modalCont').innerText = conteudo;
+        document.getElementById('modalAut').innerText = '@' + autor;
+
+        const imgCont = document.getElementById('modalImgContainer');
+        const imgTag = document.getElementById('modalImg');
+
+        if (imagem && imagem !== '' && imagem !== 'None') {
+            imgTag.src = '/media/' + imagem;
+            imgCont.classList.remove('hidden');
+        } else {
+            imgCont.classList.add('hidden');
+        }
+
+        document.getElementById('modalNoticia').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function fecharModal() {
+        document.getElementById('modalNoticia').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    document.addEventListener('keydown', (e) => { if (e.key === "Escape") fecharModal(); });
+</script>
 {% endblock %}
