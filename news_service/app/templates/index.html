@@ -4,7 +4,9 @@
 
 {% block content %}
 <div class="max-w-6xl mx-auto">
-    <div class="flex justify-between items-end mb-10 border-b border-gray-200 dark:border-slate-800 pb-6">
+
+    <div
+        class="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-gray-200 dark:border-slate-800 pb-6 gap-4">
         <div>
             <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">Feed Principal</h1>
             <p class="text-gray-500 dark:text-slate-400 mt-1">Últimas atualizações da comunidade</p>
@@ -18,8 +20,11 @@
         {% endif %}
     </div>
 
+    {% set lista_noticias = (noticias_com_autor or noticias) %}
+
+    {% if lista_noticias %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {% for item in (noticias_com_autor or noticias) %}
+        {% for item in lista_noticias %}
 
         {% if item.noticia %}
         {% set post = item.noticia %}
@@ -64,7 +69,6 @@
 
                 <div
                     class="mt-auto pt-4 border-t border-gray-50 dark:border-slate-800 flex justify-between items-center">
-
                     <button onclick="abrirModal(this)" data-titulo="{{ post.titulo }}"
                         data-conteudo="{{ post.conteudo }}" data-autor="{{ autor }}"
                         data-imagem="{{ post.imagem or '' }}"
@@ -93,6 +97,32 @@
         </article>
         {% endfor %}
     </div>
+
+    {% else %}
+    <div
+        class="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-indigo-50 dark:bg-slate-800 mb-6">
+            <span class="text-4xl">📝</span>
+        </div>
+        <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">Nenhuma notícia publicada ainda</h3>
+        <p class="text-gray-500 dark:text-slate-400 max-w-md mx-auto mb-8">
+            Parece que estamos começando do zero! Seja o primeiro a compartilhar algo interessante com a comunidade.
+        </p>
+
+        {% if g.user_id %}
+        <a href="/noticias/criar"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Criar Primeira Notícia
+        </a>
+        {% else %}
+        <a href="/cadastro/login"
+            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Fazer Login para Postar
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
 </div>
 
 <div id="modalNoticia" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">

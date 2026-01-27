@@ -9,6 +9,7 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![CI/CD](https://img.shields.io/badge/CI/CD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 ![Traefik](https://img.shields.io/badge/Proxy-Traefik-0D2232?style=for-the-badge&logo=traefikproxy&logoColor=white)
 ![Redis](https://img.shields.io/badge/Cache-Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
@@ -40,6 +41,12 @@ Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do
 
 ## 🛠️ Funcionalidades
 
+### 🎨 Interface & UX
+* **Design Moderno e Responsivo:** Interface construída com **TailwindCSS**, garantindo adaptação perfeita para mobile e desktop.
+* **Dark Mode:** Suporte completo a tema escuro/claro com persistência de preferência do usuário via LocalStorage.
+* **Interatividade:** Animações fluidas nos cards, modais para leitura de notícias e feedback visual em formulários.
+
+### ⚙️ Backend & Arquitetura
 * **Arquitetura de Microserviços:** Dois serviços Flask independentes (`users-service` e `news-service`).
 * **Autenticação de Usuário:** Registro e login completos, com senhas hasheadas (Bcrypt).
 * **Gerenciamento de Sessão:** Sessões compartilhadas entre os dois serviços usando **Redis**.
@@ -52,6 +59,11 @@ Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do
 * **100% Containerizado:** Toda a arquitetura (Traefik, 2x Flask, 2x MariaDB, 1x Redis) é orquestrada com Docker Compose.
 
 ## ⚙️ Tecnologias Utilizadas
+
+#### Front-end
+* **TailwindCSS** (Estilização Utility-First)
+* **HTML5 / Jinja2** (Templates)
+* **JavaScript** (Lógica de Modais e Dark Mode)
 
 #### Back-end (Framework & Servidor)
 * **Python 3** / **Flask** / **Gunicorn**
@@ -147,9 +159,9 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
 
 4.  **Acesse a Aplicação (Produção)**
 
-    O modo de produção usa a porta 80 padrão:
-    * **Página Inicial (Notícias):** `http://localhost/noticias/`
-    * **Página de Cadastro:** `http://localhost/cadastro/register`
+    O modo de produção usa a porta 8000 padrão:
+    * **Página Inicial (Notícias):** `http://localhost:8000/noticias/`
+    * **Página de Cadastro:** `http://localhost:8000/cadastro/register`
     * **Dashboard do Traefik:** `http://localhost:8080/`
 
     (Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)
