@@ -5,25 +5,28 @@
 services:
   # TRAEFIK
   traefik:
-    image: "traefik:v2.9"
-    container_name: "traefik_proxy"
-    restart: always #se o container parar, o docker reinicializa automaticamente
+    image: "traefik:v2.11"  # Voltando para a versão "tanque de guerra"
+    container_name: "traefik_proxy_legacy" # Nome novo para garantir recriação
+    restart: always
+    environment:
+      # Mantemos a variável, a v2 costuma respeitar melhor
+      - DOCKER_API_VERSION=1.44
     command:
-      - "--api.insecure=true" #habilita o dashboard de administração do traefik
-      - "--providers.docker=true" #habilita ao traefik observar mudanças no docker e criar rotas para elas automaticamente.
-      - "--providers.docker.exposedbydefault=false" #medida de segurança para que o traefik só exponha os containers que tiverem a label "traefik.enable=true"
-      - "--entrypoints.web.address=:80" #define a porta de escuta chamada web que fica na porta 80 do container do traefik
-      - "--providers.docker.network=proxy-net" #informa a rede proxy-net para o traefik procurar os conatainers
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=DEBUG"
     ports:
-      #mapeia as portas da máquina --> container 
-      - "8000:80" #prota da aplicação
-      - "8080:8080" #porta do dashboard traefik 
+      - "8000:80"
+      - "8080:8080"
     volumes:
-      #monta pastas ou arquivos de volume de fora para dentro do container
-      - "/var/run/docker.sock:/var/run/docker.sock:ro" # monta o socket do docker dentro do container do traefik para que ele consiga se comunicar com docker. "ro" --> read only
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
-      #conecta o serviço à rede proxy-net
       - proxy-net
+    # Adicionamos isto para tentar furar bloqueios de segurança (AppArmor/SELinux)
+    security_opt:
+      - "label:disable"
 
   # APLICAÇÃO DE NOTÍCIAS (FLASK)
   news-service:
@@ -58,17 +61,21 @@ services:
     networks:
       - proxy-net #conecta o serviço à rede proxy-net
     labels:
-      #etiquetas que o traefik lê
-      # Roteamento Traefik 
-      - "traefik.enable=true" #permite a exposição do container
-      - "traefik.http.routers.news-router.rule=Host(`localhost`) && PathPrefix(`/noticias`)" #se o host for "localhost" E o caminho começar com "/noticias" -->
-      - "traefik.http.routers.news-router.entrypoints=web" #no ponto de entrada web (porta 8000) -->
-      - "traefik.http.routers.news-router.service=news-service" #envia o tráfego para o serviço traefik news-service
-      - "traefik.http.services.news-service.loadbalancer.server.port=8000" #define o serviço traefik news-service (deve encaminhar o tráfego para a porta 8000 deste container)
-      # Rota de mídia 
-      - "traefik.http.routers.news-media-router.rule=Host (`localhost`) && PathPrefix(`/media`)" #mesma lógica de antes mas para o caminho /media (para que o traefik consiga servir arquivos estáticos de upload)
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy-net"
+      
+      # ROTA PRINCIPAL: Aceita /noticias, e entrega /noticias (sem cortar nada)
+      - "traefik.http.routers.news-router.rule=PathPrefix(`/noticias`)"
+      - "traefik.http.routers.news-router.entrypoints=web"
+      # REMOVIDO: Middlewares de strip (não precisamos mais deles)
+      
+      # ROTA DE MÍDIA: Essa a gente MANTÉM o strip, porque a pasta no disco não chama "media"
+      - "traefik.http.routers.news-media-router.rule=PathPrefix(`/media`)"
       - "traefik.http.routers.news-media-router.entrypoints=web"
-      - "traefik.http.routers.news-media-router.service=news-service"
+      - "traefik.http.middlewares.media-strip.stripprefix.prefixes=/media"
+      - "traefik.http.routers.news-media-router.middlewares=media-strip"
+
+      - "traefik.http.services.news-service.loadbalancer.server.port=8000"
 
   # BANCO DE DADOS DO SERVIÇO NOTÍCIAS 
   news-db:
@@ -123,11 +130,19 @@ services:
     networks:
       - proxy-net
     labels:
-      # Roteamento do Traefik
       - "traefik.enable=true"
-      - "traefik.http.routers.users-router.rule=Host(`localhost`) && PathPrefix(`/cadastro`)" #IGUAL, só muda p rota /cadastro
+      - "traefik.docker.network=proxy-net"
+      
+      # ROTA DE CADASTRO: Aceita /cadastro e entrega /cadastro
+      - "traefik.http.routers.users-router.rule=PathPrefix(`/cadastro`)"
       - "traefik.http.routers.users-router.entrypoints=web"
-      - "traefik.http.routers.users-router.service=users-service"
+      # REMOVIDO: Middlewares de strip
+
+      # IMPORTANTE: Você precisa de uma rota pro Traefik enxergar a API também!
+      # Adicionei isso aqui para sua API interna funcionar:
+      - "traefik.http.routers.users-api-router.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.users-api-router.entrypoints=web"
+      
       - "traefik.http.services.users-service.loadbalancer.server.port=8000"
 
   # BANCO DE DADOS DE USUÁRIOS
