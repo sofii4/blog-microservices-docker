@@ -11,11 +11,10 @@ services:
     environment:
       - DOCKER_API_VERSION=1.44
     command:
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "--log.level=DEBUG"
+      - "--log.level=INFO"
     ports:
       - "8000:80"
       - "8080:8080"   # Dashboard
@@ -25,6 +24,14 @@ services:
       - proxy-net
     security_opt:
       - "label:disable"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
 
   # APLICAÇÃO DE NOTÍCIAS (FLASK)
   news-service:
@@ -49,7 +56,7 @@ services:
       news-db:
         condition: service_healthy
       redis-sessions:
-        condition: service_started
+        condition: service_healthy
     networks:
       - proxy-net
     labels:
@@ -62,6 +69,14 @@ services:
       - "traefik.http.routers.news-media-router.rule=PathPrefix(`/media`)"
       - "traefik.http.routers.news-media-router.entrypoints=web"
       - "traefik.http.services.news-service.loadbalancer.server.port=8000"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1G
+        reservations:
+          cpus: '0.75'
+          memory: 512M
 
   # BANCO DE DADOS DO SERVIÇO NOTÍCIAS
   news-db:
@@ -82,6 +97,14 @@ services:
       retries: 5
     networks:
       - proxy-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1.5G
+        reservations:
+          cpus: '1'
+          memory: 768M
 
   # APLICAÇÃO DE USUÁRIOS (FLASK)
   users-service:
@@ -104,7 +127,7 @@ services:
       users-db:
         condition: service_healthy
       redis-sessions:
-        condition: service_started
+        condition: service_healthy
     networks:
       - proxy-net
     labels:
@@ -117,6 +140,14 @@ services:
       - "traefik.http.routers.users-api-router.rule=PathPrefix(`/api`)"
       - "traefik.http.routers.users-api-router.entrypoints=web"
       - "traefik.http.services.users-service.loadbalancer.server.port=8000"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1G
+        reservations:
+          cpus: '0.75'
+          memory: 512M
 
   # BANCO DE DADOS DE USUÁRIOS
   users-db:
@@ -137,6 +168,14 @@ services:
       retries: 5
     networks:
       - proxy-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1.5G
+        reservations:
+          cpus: '1'
+          memory: 768M
 
   # BANCO DE SESSÕES COMPARTILHADO
   redis-sessions:
@@ -145,8 +184,21 @@ services:
     restart: always
     expose:
       - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - proxy-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
 
 volumes:
   news_db_data:

@@ -12,7 +12,7 @@
         <p class="text-sm text-gray-500 dark:text-slate-400">Bem-vindo de volta!</p>
     </div>
 
-    <form method="post" class="space-y-6">
+    <form method="post" action="{{ url_for('auth.login') }}" class="space-y-6">
         <div>
             <label for="username"
                 class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Usuário</label>

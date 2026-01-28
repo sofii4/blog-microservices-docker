@@ -1,89 +1,129 @@
-
-
-import os # pra interagir com sistema de arquivos (deletar imagens)
-import requests #permite as API calls
-from functools import wraps # pro decorador de login
+import os
+import requests
+from functools import wraps
 from flask import (
     Blueprint, render_template, request, redirect, url_for, session, 
     flash, g, current_app
 )
-#organizar as rotas, renderizar o html, acessar dados de um form, redirecionar p outra página, conectar com redis, "bloco de notas" pra cada requisição, mostrar mensagens de erro ou sucesso, pegar configurações globais.
+from werkzeug.utils import secure_filename
+from .models import Noticia
+from . import db
 
-from werkzeug.utils import secure_filename  #limpar nome do arquivo enviado
-from .models import Noticia #importar o molde da tabela "Noticia" do bd
-from . import db #importar a conexão com bd
+# Configurações de validação
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
+SUPERUSER_ID = 1
 
-bp = Blueprint('noticias', __name__)  #registrar o arquivo no flask
+bp = Blueprint('noticias', __name__)
 
 
-@bp.before_request # Executa antes de cada view
+@bp.before_request
 def load_logged_in_user():
     """
-    Verifica se o user_id está na sessão (Redis) e o carrega no 'g'.
-    Isso torna g.user_id e g.username disponíveis para TODOS os templates.
+    Load user_id and username from Redis session into g object.
+    Makes them available to all templates.
     """
-    g.user_id = session.get('user_id') #pergunta ao redis o user_id
-    g.username = session.get('username') #armazena o resultado no "bloco de notas"
+    g.user_id = session.get('user_id')
+    g.username = session.get('username')
 
-# Verifica o login
-def login_required(f): #checa o bloco de notas
+# Login verification decorator
+def login_required(f):
     @wraps(f) 
     def decorated_function(*args, **kwargs):
         if g.user_id is None: 
             flash('Você precisa estar logado para acessar esta página.', 'warning')
-            return redirect('/cadastro/login')
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
-# Rotas de apoio
-def get_author_username(author_id): # API CALL 
+# Helper functions
+def get_author_username(author_id):
+    """
+    Fetch author username from users-service via internal API.
+    Returns 'Unnamed Author' if unavailable.
+    """
     try:
-        url = f"http://users-service:8000/api/user/{author_id}" #monta uma URL interna do Docker
-        response = requests.get(url, timeout=3) #liga para o users-service 
-        if response.status_code == 200: #se a ligação funcionou:
-            return response.json().get('username', 'Autor Desconhecido') #pega a resposta JSON 
+        url = f"http://users-service:8000/api/user/{author_id}"
+        response = requests.get(url, timeout=3)
+        if response.status_code == 200:
+            return response.json().get('username', 'Unnamed Author')
     except requests.exceptions.RequestException as e:
-        print(f"Erro ao contatar users-service: {e}")
-    return "Autor (Erro)"
+        current_app.logger.warning(f"Failed to reach users-service: {e}")
+    return "Unnamed Author"
 
-def save_picture(form_picture): #upload de imagem
-    filename = secure_filename(form_picture.filename) #limpa o nome do arquivo (segurança)
-    picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename) #descobre o caminho onde salvar a imagem
-    form_picture.save(picture_path) #salva o arquivo no disco
-    return filename #retorna o nome da imagem pra salvar no banco
+def allowed_file(filename):
+    """Check if file extension is allowed."""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Rotas principais
+def save_picture(form_picture):
+    """
+    Save uploaded image to disk with validation.
+    Returns filename or None if validation fails.
+    """
+    # Validate file size
+    form_picture.seek(0, os.SEEK_END)
+    file_size = form_picture.tell()
+    form_picture.seek(0)
+    
+    if file_size > MAX_FILE_SIZE:
+        raise ValueError(f'Arquivo muito grande. Máximo {MAX_FILE_SIZE // (1024*1024)}MB.')
+    
+    # Validate file type
+    if not allowed_file(form_picture.filename):
+        raise ValueError(f'Tipo de arquivo não permitido. Extensões aceitas: {", ".join(ALLOWED_EXTENSIONS)}')
+    
+    filename = secure_filename(form_picture.filename)
+    picture_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    form_picture.save(picture_path)
+    return filename
+
+# Main routes
 @bp.route('/') 
-def index(): #busca posts no bd desse serviço, e busca os nomes dos autoes no users-service via API
+def index():
+    """Display all news articles with author information."""
     noticias_db = Noticia.query.order_by(Noticia.data_publicacao.desc()).all() 
-    noticias_para_template = [] #cria uma lista com todos os POSTS
+    noticias_para_template = []
     for noticia in noticias_db: 
-        author_name = get_author_username(noticia.author_id) #busca o nome via API
-        noticias_para_template.append({ #adiciona o resultado na lista
+        author_name = get_author_username(noticia.author_id)
+        noticias_para_template.append({
             'noticia': noticia,
             'author_name': author_name
         })
-    return render_template('index.html', noticias_com_autor=noticias_para_template) #renderiza as notícias completas
+    return render_template('index.html', noticias_com_autor=noticias_para_template)
 
-# Cadastrar um POST (notícia) 
-@bp.route('/criar', methods=('GET', 'POST'))  #GET mostra um formulário em branco, POST salva no banco.
-@login_required #chama a função de verificação de login
-def criar_noticia(): 
-    if request.method == 'POST': #salva:
-        titulo = request.form['titulo'] 
-        conteudo = request.form['conteudo']
-        imagem_file = request.files.get('imagem')
-        author_id = g.user_id # Pega o ID do bloco de notas
+# Create news article
+@bp.route('/criar', methods=('GET', 'POST'))
+@login_required
+def criar_noticia():
+    """Create a new news article with optional image upload."""
+    if request.method == 'POST':
+        titulo = request.form.get('titulo', '').strip()
+        conteudo = request.form.get('conteudo', '').strip()
+        
+        # Validate required fields
+        if not titulo:
+            flash('Título é obrigatório.', 'danger')
+            return redirect(url_for('noticias.criar_noticia'))
+        
+        if not conteudo:
+            flash('Conteúdo é obrigatório.', 'danger')
+            return redirect(url_for('noticias.criar_noticia'))
         
         filename = None
-        if imagem_file:
-            filename = save_picture(imagem_file) #chama a função de salvar imagem
+        imagem_file = request.files.get('imagem')
         
-        nova_noticia = Noticia( #cria um novo molde de notícia
+        if imagem_file and imagem_file.filename:
+            try:
+                filename = save_picture(imagem_file)
+            except ValueError as e:
+                flash(f'Erro no upload: {str(e)}', 'danger')
+                return redirect(url_for('noticias.criar_noticia'))
+        
+        nova_noticia = Noticia(
             titulo=titulo,
             conteudo=conteudo,
             imagem=filename,
-            author_id=author_id
+            author_id=g.user_id
         )
         db.session.add(nova_noticia)
         db.session.commit()
@@ -91,45 +131,46 @@ def criar_noticia():
         flash('Notícia cadastrada com sucesso!', 'success')
         return redirect(url_for('noticias.index'))
 
-    return render_template('criar_noticia.html') #se não for post, é get: mostrar formulário vazio
+    return render_template('criar_noticia.html')
 
 
-@bp.route('/noticias/delete/<int:noticia_id>', methods=('POST',)) #deletar notícia
-@login_required #chama a função de verificação de login
+# Delete news article
+@bp.route('/noticias/delete/<int:noticia_id>', methods=('POST',))
+@login_required
 def delete_noticia(noticia_id):
     """
-    Deleta uma notícia.
-    Acessível se o usuário for o autor OU o superusuário (ID 1).
+    Delete a news article.
+    Only accessible to the article author or superuser.
     """
-    noticia = Noticia.query.get_or_404(noticia_id) #encontra o POST da notícia no banco, se não -- ERRO 404
+    noticia = Noticia.query.get_or_404(noticia_id)
 
-    # lógica de autenticação de permissão
-    if g.user_id != 1 and g.user_id != noticia.author_id: 
+    # Permission check: only author or superuser
+    if g.user_id != SUPERUSER_ID and g.user_id != noticia.author_id:
+        current_app.logger.warning(f"Unauthorized delete attempt by user {g.user_id} on article {noticia_id}")
         flash('Você não tem permissão para deletar este post.', 'danger')
-        return redirect(url_for('noticias.index')) #redireciona pra home
+        return redirect(url_for('noticias.index'))
     
+    # Handle image deletion
     if noticia.imagem:
-        # Pega o nome do arquivo que queremos deletar
         filename_to_delete = noticia.imagem
         
-        # "Conte quantos OUTROS posts usam esta MESMA imagem"
+        # Count other articles using the same image
         outros_posts_com_a_imagem = Noticia.query.filter(
             Noticia.imagem == filename_to_delete,
-            Noticia.id != noticia_id  # Exclui o post que já estamos deletando
+            Noticia.id != noticia_id
         ).count()
         
-        # Só deleta o arquivo se ninguém mais o estiver usando
+        # Only delete file if no other articles are using it
         if outros_posts_com_a_imagem == 0:
             try:
-                # O caminho é relativo à pasta UPLOAD_FOLDER dentro do container
                 image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename_to_delete)
                 if os.path.exists(image_path):
                     os.remove(image_path)
-                    print(f"Arquivo {filename_to_delete} deletado do disco.")
+                    current_app.logger.info(f"Image deleted: {filename_to_delete}")
             except Exception as e:
-                print(f"Erro ao tentar deletar o arquivo de imagem: {e}")
+                current_app.logger.error(f"Failed to delete image {filename_to_delete}: {e}")
         else:
-            print(f"Arquivo {filename_to_delete} mantido no disco (em uso por outros {outros_posts_com_a_imagem} posts).")
+            current_app.logger.info(f"Image {filename_to_delete} still in use by {outros_posts_com_a_imagem} articles")
 
     db.session.delete(noticia)
     db.session.commit()
@@ -138,47 +179,61 @@ def delete_noticia(noticia_id):
     return redirect(url_for('noticias.index'))
 
 
-# Editar notícia
-@bp.route('/noticias/edit/<int:noticia_id>', methods=('GET', 'POST')) #GET mostra o formulário preenchido, POST salva
-@login_required #chama a função de verificação de login
+# Edit news article
+@bp.route('/noticias/edit/<int:noticia_id>', methods=('GET', 'POST'))
+@login_required
 def edit_noticia(noticia_id):
     """
-    Exibe (GET) e processa (POST) o formulário de edição de uma notícia.
-    Acessível se o usuário for o autor OU o superusuário (ID 1).
+    Edit a news article.
+    Only accessible to the article author or superuser.
     """
-    
-    noticia = Noticia.query.get_or_404(noticia_id) # Encontra o POST no banco, se não -- ERRO 404
+    noticia = Noticia.query.get_or_404(noticia_id)
 
-    # Regra de permissão
-    if g.user_id != 1 and g.user_id != noticia.author_id:
+    # Permission check: only author or superuser
+    if g.user_id != SUPERUSER_ID and g.user_id != noticia.author_id:
+        current_app.logger.warning(f"Unauthorized edit attempt by user {g.user_id} on article {noticia_id}")
         flash('Você não tem permissão para editar este post.', 'danger')
-        return redirect(url_for('noticias.index')) #redireciona pra home
+        return redirect(url_for('noticias.index'))
 
-    if request.method == 'POST': #salva:
-        # Atualiza os dados da notícia com o que veio do formulário
-        noticia.titulo = request.form['titulo']
-        noticia.conteudo = request.form['conteudo']
+    if request.method == 'POST':
+        titulo = request.form.get('titulo', '').strip()
+        conteudo = request.form.get('conteudo', '').strip()
         
-        # Checa se uma nova imagem foi enviada
+        # Validate required fields
+        if not titulo:
+            flash('Título é obrigatório.', 'danger')
+            return redirect(url_for('noticias.edit_noticia', noticia_id=noticia_id))
+        
+        if not conteudo:
+            flash('Conteúdo é obrigatório.', 'danger')
+            return redirect(url_for('noticias.edit_noticia', noticia_id=noticia_id))
+        
+        noticia.titulo = titulo
+        noticia.conteudo = conteudo
+        
+        # Handle image upload if provided
         imagem_file = request.files.get('imagem')
-        if imagem_file:
-            # Deleta a imagem antiga, se ela existir
-            if noticia.imagem:
-                try:
-                    old_image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], noticia.imagem)
-                    if os.path.exists(old_image_path):
-                        os.remove(old_image_path)
-                except Exception as e:
-                    print(f"Erro ao deletar imagem antiga: {e}")
+        if imagem_file and imagem_file.filename:
+            try:
+                # Delete old image if exists
+                if noticia.imagem:
+                    try:
+                        old_image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], noticia.imagem)
+                        if os.path.exists(old_image_path):
+                            os.remove(old_image_path)
+                            current_app.logger.info(f"Old image deleted: {noticia.imagem}")
+                    except Exception as e:
+                        current_app.logger.error(f"Failed to delete old image: {e}")
 
-            # Salva a nova imagem
-            filename = save_picture(imagem_file)
-            noticia.imagem = filename
+                # Save new image
+                filename = save_picture(imagem_file)
+                noticia.imagem = filename
+            except ValueError as e:
+                flash(f'Erro no upload: {str(e)}', 'danger')
+                return redirect(url_for('noticias.edit_noticia', noticia_id=noticia_id))
         
-        db.session.commit() # Salva as mudanças no banco (não usa .add pra não criar um novo, só atualiza)
-        
+        db.session.commit()
         flash('Notícia atualizada com sucesso!', 'success')
         return redirect(url_for('noticias.index'))
 
-    # Se for GET< renderizar um template preenchido com o objeto noticia
     return render_template('edit_noticia.html', noticia=noticia)

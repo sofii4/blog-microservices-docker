@@ -17,7 +17,7 @@ def create_app(config_class=Config):
     """A fábrica de aplicação."""
     
     # Cria a instância principal do Flask
-    app = Flask(__name__, static_url_path='/cadastro/static')
+    app = Flask(__name__)
     
     # Carrega as configurações do config.py
     app.config.from_object(config_class)
@@ -34,6 +34,7 @@ def create_app(config_class=Config):
         from . import models
         
         # Importa e registra as rotas
+        # Traefik remove '/cadastro' e '/api' via StripPrefix middleware
         from . import auth_routes
         from . import api_routes
         

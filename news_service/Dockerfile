@@ -32,4 +32,4 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser && \
 
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--reload", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "run:app"]

@@ -173,3 +173,138 @@ Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do D
     ```bash
     docker compose -f docker-compose.prod.yml down --volumes
     ```
+
+---
+
+## 📋 Requisitos do Sistema
+
+- **Docker:** v20.10+
+- **Docker Compose:** v1.29+
+- **RAM:** Mínimo 2GB disponível
+- **Espaço em disco:** ~3GB para todas as imagens
+- **Portas disponíveis:** 8000, 8080
+
+## 🔧 Variáveis de Ambiente (`.env`)
+
+O arquivo `.env` é essencial e **deve conter**:
+
+```dotenv
+# Flask Configuration
+FLASK_APP=run.py
+FLASK_DEBUG=1  # Change to 0 in production
+SECRET_KEY=sua-chave-secreta-muito-forte-aqui  # REQUIRED: Change to a strong secret
+
+# Redis Session Storage
+SESSION_TYPE=redis
+SESSION_REDIS_URL=redis://redis-sessions:6379/0
+
+# Users Database
+USERS_DB_ROOT_PASSWORD=senha-root-super-forte
+USERS_DB_DATABASE=users_db
+USERS_DB_USER=users_user
+USERS_DB_PASSWORD=senha-usuario-super-forte
+
+# News Database
+NEWS_DB_ROOT_PASSWORD=outra-senha-root-super-forte
+NEWS_DB_DATABASE=noticias_db
+NEWS_DB_USER=noticias_user
+NEWS_DB_PASSWORD=outra-senha-usuario-super-forte
+```
+
+⚠️ **Security:** Never commit `.env` (already in `.gitignore`). Change ALL passwords before production!
+
+## 🐛 Troubleshooting
+
+### Error: "Connection refused" when connecting to database
+- Check if containers are running: `docker compose ps`
+- Wait a few seconds for database initialization (healthcheck)
+- Verify credentials in `.env`
+
+### Error: "Users service unreachable" when displaying news
+- Confirm `users-service` is running: `docker compose ps`
+- Check logs: `docker compose logs users-service`
+- Internal APIs only work within Docker network
+
+### Redis timeout or Session errors
+- Restart Redis container: `docker compose restart redis-sessions`
+- Check available memory: `docker stats`
+
+### Port 8000 already in use
+```bash
+# Find process using the port
+lsof -i :8000
+
+# Or change port in docker-compose.yml:
+# ports:
+#   - "8001:80"  # Use 8001 instead of 8000
+```
+
+### `.env` file not loaded
+- Confirm it's in project root: `ls -la | grep .env`
+- Restart containers: `docker compose restart`
+
+---
+
+## 📚 Project Structure
+
+```
+.
+├── news_service/          # News Service (Flask)
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── models.py      # News model
+│   │   ├── routes.py      # CRUD routes
+│   │   ├── config.py      # Configuration
+│   │   ├── templates/     # Jinja2 templates
+│   │   └── static/
+│   │       └── uploads/   # News images
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── users_service/         # Users Service (Flask)
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── models.py      # User model
+│   │   ├── auth_routes.py # Login/Register
+│   │   ├── api_routes.py  # API for user data
+│   │   ├── config.py
+│   │   └── templates/
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── docker-compose.yml     # Development configuration
+├── docker-compose.prod.yml # Production configuration
+├── .env.example           # Environment variables template
+└── README.md
+```
+
+---
+
+## 🏗️ Internal Architecture
+
+```
+Client (Browser)
+    ↓
+Traefik (Reverse Proxy on port 80/8000)
+    ├── /cadastro → users-service:8000
+    ├── /api → users-service:8000
+    └── /noticias → news-service:8000
+         ↓
+    news-service communicates with users-service via internal HTTP
+         ↓
+    Both share session via Redis
+         ↓
+    Each service has its own MariaDB database
+```
+
+---
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👤 Author
+
+[Sofia Lopes](https://github.com/sofii4)
+
+Feel free to open issues and pull requests!

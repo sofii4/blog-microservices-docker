@@ -1,22 +1,19 @@
-
-
-from . import db  # do __init__.py
+from . import db
 from datetime import datetime
 
 class Noticia(db.Model):
     """
-    Define a tabela 'noticia' no banco de dados.
+    News article database model.
+    Represents a news post with title, content, optional image, and metadata.
     """
     __tablename__ = 'noticia'
     
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(200), nullable=False)
     conteudo = db.Column(db.Text, nullable=False)
-    # salva apenas o NOME DO ARQUIVO da imagem.
-    imagem = db.Column(db.String(200), nullable=True) 
+    imagem = db.Column(db.String(200), nullable=True)  # Stores only the filename
     data_publicacao = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    # armazena apenas o ID do autor.
-    author_id = db.Column(db.Integer, nullable=False)
+    author_id = db.Column(db.Integer, nullable=False)  # Foreign reference to users-service
 
     def __repr__(self):
         return f'<Noticia {self.titulo}>'

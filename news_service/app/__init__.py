@@ -40,8 +40,7 @@ def create_app(config_class=Config):
 
         # Registra a nova rota
         from . import routes
-        # O Traefik manda /noticias/*, e remove o /noticias.
-        # Então, o Flask vê apenas / e /criar
+        # Traefik remove '/noticias' via StripPrefix middleware
         app.register_blueprint(routes.bp, url_prefix='/noticias')
 
         # Cria as tabelas do banco

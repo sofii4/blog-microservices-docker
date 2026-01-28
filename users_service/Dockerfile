@@ -29,4 +29,4 @@ RUN chown -R appuser:appuser /app
 USER appuser
 
 # O comando para iniciar o servidor. 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--reload", "run:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "run:app"]
