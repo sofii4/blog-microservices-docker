@@ -21,27 +21,36 @@
             <form class="space-y-6" action="{{ url_for('auth.register') }}" method="POST">
 
                 <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Nome de
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">Nome de
                         Usuário</label>
                     <div class="mt-1">
-                        <input id="username" name="username" type="text" required
+                        <input id="username" name="username" type="text" value="{{ username }}" required
                             class="block w-full appearance-none rounded-lg border border-gray-300 dark:border-slate-700 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-slate-950 dark:text-white sm:text-sm transition-colors">
                     </div>
                 </div>
 
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Email</label>
+                    <label for="email" class="block text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">Email</label>
                     <div class="mt-1">
-                        <input id="email" name="email" type="email" required
+                        <input id="email" name="email" type="email" value="{{ email }}" required
                             class="block w-full appearance-none rounded-lg border border-gray-300 dark:border-slate-700 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-slate-950 dark:text-white sm:text-sm transition-colors">
                     </div>
                 </div>
 
                 <div>
                     <label for="password"
-                        class="block text-sm font-medium text-gray-700 dark:text-slate-300">Senha</label>
+                        class="block text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">Senha</label>
                     <div class="mt-1">
                         <input id="password" name="password" type="password" required
+                            class="block w-full appearance-none rounded-lg border border-gray-300 dark:border-slate-700 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-slate-950 dark:text-white sm:text-sm transition-colors">
+                    </div>
+                </div>
+
+                <!--BLOCO NOVO DE CONFIRMAR SENHA-->
+                <div>
+                    <label for="password-confirm" class="block text-sm font-medium text-gray-700 dark:text-slate-300 ml-1">Confirmar senha</label>
+                    <div class="mt-1">
+                        <input id="password-confirm" name="confirm_password" type="password" required
                             class="block w-full appearance-none rounded-lg border border-gray-300 dark:border-slate-700 px-3 py-2 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 dark:bg-slate-950 dark:text-white sm:text-sm transition-colors">
                     </div>
                 </div>

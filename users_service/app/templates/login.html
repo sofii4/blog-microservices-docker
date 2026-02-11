@@ -5,7 +5,7 @@
 {% block content %}
 
 <div
-    class="max-w-md mx-auto mt-10 bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-slate-800 transition-colors">
+    class="w-full max-w-md mx-auto my-auto bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-slate-800 transition-colors">
     <div class="text-center mb-8">
         <span class="text-4xl">🔐</span>
         <h2 class="text-2xl font-bold text-gray-900 dark:text-white mt-4">Acesse sua conta</h2>
@@ -15,13 +15,14 @@
     <form method="post" action="{{ url_for('auth.login') }}" class="space-y-6">
         <div>
             <label for="username"
-                class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Usuário</label>
+                class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 ml-1">Usuário</label>
             <input type="text" name="username" id="username" required
                 class="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:text-white transition-colors">
         </div>
 
         <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Senha</label>
+            <label for="password"
+                class="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1 ml-1">Senha</label>
             <input type="password" name="password" id="password" required
                 class="w-full px-4 py-2 border border-gray-300 dark:border-slate-700 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-950 dark:text-white transition-colors">
         </div>

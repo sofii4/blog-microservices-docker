@@ -9,10 +9,14 @@ bp = Blueprint('auth', __name__)
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     """Display and process user registration form."""
+    username = ""
+    email = ""
+
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
         
         # Check for existing username or email
         user_exists = User.query.filter_by(username=username).first()
@@ -23,6 +27,8 @@ def register():
             error = 'Este nome de usuário já está em uso.'
         elif email_exists: 
             error = 'Este e-mail já está em uso.'
+        elif password != confirm_password: # validação senha
+            error = 'As senhas não coincidem.'
 
         if error is None: 
             new_user = User(username=username, email=email)
@@ -36,7 +42,7 @@ def register():
         
         flash(error, 'danger')
 
-    return render_template('register.html')
+    return render_template('register.html', username=username, email=email)
 
 
 # User login

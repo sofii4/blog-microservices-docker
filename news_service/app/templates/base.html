@@ -97,21 +97,23 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 mt-6 w-full">
+    <div class="max-w-7xl mx-auto px-4 w-full">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        {% for category, message in messages %}
-        <div
-            class="p-4 mb-4 rounded-xl border-l-4 shadow-sm text-sm font-medium flex items-center animate-bounce-in
-                    {% if category == 'success' %} bg-green-50 dark:bg-green-900/30 border-green-500 text-green-700 dark:text-green-300
-                    {% elif category == 'error' or category == 'danger' %} bg-red-50 dark:bg-red-900/30 border-red-500 text-red-700 dark:text-red-300
-                    {% else %} bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300 {% endif %}">
-            <span class="mr-2 text-lg">
-                {% if category == 'success' %} ✅ {% elif category == 'error' %} ⚠️ {% else %} ℹ️ {% endif %}
-            </span>
-            {{ message }}
+        <div class="mt-6"> {% for category, message in messages %}
+            <div
+                class="p-4 mb-4 rounded-xl border-l-4 shadow-sm text-sm font-medium flex items-center animate-bounce-in
+                                {% if category == 'success' %} bg-green-50 dark:bg-green-900/30 border-green-500 text-green-700 dark:text-green-300
+                                {% elif category == 'error' or category == 'danger' %} bg-red-50 dark:bg-red-900/30 border-red-500 text-red-700 dark:text-red-300
+                                {% else %} bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300 {% endif %}">
+                <span class="mr-2 text-lg">
+                    {% if category == 'success' %} ✅ {% elif category == 'error' or category == 'danger' %} ⚠️ {% else %} ℹ️
+                    {% endif %}
+                </span>
+                {{ message }}
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
         {% endif %}
         {% endwith %}
     </div>
