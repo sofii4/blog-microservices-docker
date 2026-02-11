@@ -13,7 +13,7 @@ redis==7.1.0
 requests==2.32.5
 
 # Para imagem
-Pillow==12.1.0
+Pillow==12.1.1
 
 # Conector do Banco e Variáveis de Ambiente
 PyMySQL==1.1.2
