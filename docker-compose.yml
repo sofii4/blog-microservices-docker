@@ -15,7 +15,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "--log.level=DEBUG"
+      - "--log.level=DEBUG" 
     ports:
       - "8000:80"
       - "8080:8080"

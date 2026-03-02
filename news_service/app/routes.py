@@ -133,7 +133,6 @@ def criar_noticia():
 
     return render_template('criar_noticia.html')
 
-
 # Delete news article
 @bp.route('/noticias/delete/<int:noticia_id>', methods=('POST',))
 @login_required
