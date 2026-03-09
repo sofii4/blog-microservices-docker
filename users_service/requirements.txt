@@ -14,4 +14,4 @@ Flask-Bcrypt==1.0.1
 
 # Conector do Banco e Variáveis de Ambiente
 PyMySQL==1.1.2
-python-dotenv==1.2.1
+python-dotenv==1.2.2
