@@ -44,8 +44,6 @@ def create_app(config_class=Config):
         # Cria as tabelas do banco 
         db.create_all()
 
-    return app
-
     @app.route('/')
     def root_redirect():
         from flask import redirect
@@ -54,3 +52,7 @@ def create_app(config_class=Config):
     @app.route('/health')
     def health_check():
         return {'status': 'ok'}, 200
+
+    return app
+
+    
