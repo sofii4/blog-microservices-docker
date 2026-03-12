@@ -46,6 +46,15 @@ def create_app(config_class=Config):
         # Cria as tabelas do banco
         db.create_all()
 
+    @app.route('/')
+    def root_redirect():
+        from flask import redirect
+        return redirect('/noticias/')
+
+    @app.route('/health')
+    def health_check():
+        return {'status': 'ok'}, 200
+
     # Essa rota atende quando o Traefik manda algo para /media/...
     @app.route('/media/<path:filename>')
     def media(filename):

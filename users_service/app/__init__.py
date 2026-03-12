@@ -45,3 +45,12 @@ def create_app(config_class=Config):
         db.create_all()
 
     return app
+
+    @app.route('/')
+    def root_redirect():
+        from flask import redirect
+        return redirect('/cadastro/login')
+
+    @app.route('/health')
+    def health_check():
+        return {'status': 'ok'}, 200
