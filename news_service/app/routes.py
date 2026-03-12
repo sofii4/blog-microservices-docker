@@ -14,6 +14,8 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 SUPERUSER_ID = 1
 
+USERS_SERVICE_URL = os.environ.get("USERS_SERVICE_URL", "http://users-service")
+
 bp = Blueprint('noticias', __name__)
 
 
@@ -43,7 +45,7 @@ def get_author_username(author_id):
     Returns 'Unnamed Author' if unavailable.
     """
     try:
-        url = f"http://users-service:8000/api/user/{author_id}"
+        url = f"{USERS_SERVICE_URL}/api/user/{author_id}"
         response = requests.get(url, timeout=3)
         if response.status_code == 200:
             return response.json().get('username', 'Unnamed Author')

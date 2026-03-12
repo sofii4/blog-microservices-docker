@@ -23,6 +23,9 @@ class Config:
 
     # Flask-Session configuration with Redis
     SESSION_TYPE = os.environ.get('SESSION_TYPE') 
-    SESSION_REDIS = redis.from_url(os.environ.get('SESSION_REDIS'))
+    SESSION_REDIS_URL_VALUE = os.environ.get('SESSION_REDIS_URL') or os.environ.get('SESSION_REDIS')
+    if not SESSION_REDIS_URL_VALUE:
+        raise ValueError("Nenhuma variável SESSION_REDIS ou SESSION_REDIS_URL definida.")
+    SESSION_REDIS = redis.from_url(SESSION_REDIS_URL_VALUE)
     SESSION_PERMANENT = True
     SESSION_USE_SIGNER = True
