@@ -46,7 +46,7 @@ def get_author_username(author_id):
     """
     try:
         url = f"{USERS_SERVICE_URL}/api/user/{author_id}"
-        response = requests.get(url, timeout=3)
+        response = requests.get(url, timeout=10)
         if response.status_code == 200:
             return response.json().get('username', 'Unnamed Author')
     except requests.exceptions.RequestException as e:
