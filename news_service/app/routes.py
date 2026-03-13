@@ -34,7 +34,7 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         if g.user_id is None: 
             flash('Você precisa estar logado para acessar esta página.', 'warning')
-            return redirect(url_for('auth.login'))
+            return redirect('/cadastro/login')
         return f(*args, **kwargs)
     return decorated_function
 
