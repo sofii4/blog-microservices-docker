@@ -21,6 +21,12 @@ class Config:
     
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    SQLALCHEMY_ENGINE_OPTIONS = {
+    "pool_pre_ping": True,      # testa conexão antes de usar
+    "pool_recycle": 280,        # recicla conexões a cada 280s (antes do MySQL fechar em 300s)
+    "pool_timeout": 20,         # timeout para obter conexão do pool
+}
+
     # Flask-Session configuration with Redis
     SESSION_TYPE = os.environ.get('SESSION_TYPE') 
     SESSION_REDIS_URL_VALUE = os.environ.get('SESSION_REDIS_URL') or os.environ.get('SESSION_REDIS')
