@@ -1,9 +1,8 @@
-# Site de Notícias em Microserviços 
+# Site de Notícias em Microserviços
 
 <img alt="Build Status" src="https://github.com/sofii4/blog-microservices-docker/actions/workflows/build-and-push.yml/badge.svg">
 
-
-### Stack Principal 
+### Stack Principal
 
 ![Microservices](https://img.shields.io/badge/Architecture-Microservices-blue?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -13,226 +12,316 @@
 ![CI/CD](https://img.shields.io/badge/CI/CD-GitHub%20Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
 ![Traefik](https://img.shields.io/badge/Proxy-Traefik-0D2232?style=for-the-badge&logo=traefikproxy&logoColor=white)
 ![Redis](https://img.shields.io/badge/Cache-Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Prometheus](https://img.shields.io/badge/Monitoring-Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)
+![Grafana](https://img.shields.io/badge/Dashboard-Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)
 
 ---
 
-Este é um projeto full-stack que implementa uma arquitetura de microserviços completa, containerizada com Docker. A aplicação é dividida em dois serviços independentes: um `users-service` (para registro, login, autenticação e gerenciamento de identidade) e um `news-service` (para o CRUD de notícias).
+Este projeto full-stack implementa uma arquitetura de microserviços containerizada com Docker. A aplicação é dividida em dois serviços independentes: um `users-service` para registro, login, autenticação e gerenciamento de identidade, e um `news-service` para o CRUD de notícias.
 
-O sistema demonstra conceitos-chave de microserviços, incluindo um roteamento de requisições centralizado com um proxy reverso (Traefik), persistência de sessão compartilhada entre serviços usando Redis, e comunicação de serviço-para-serviço através de uma API REST interna (para buscar dados de autores).
+A solução agora também inclui monitoramento e observabilidade com **Prometheus** e **Grafana**. Os dois serviços Flask expõem métricas automaticamente via `prometheus_flask_exporter`, o Prometheus faz o scrape dessas métricas, e o Grafana é provisionado com datasource e dashboard prontos para uso.
 
-## 🚀 Automação (CI/CD) com GitHub Actions
+## Visão Geral da Arquitetura
 
-O projeto está configurado com um pipeline de **Integração Contínua (CI)** e **Entrega Contínua (CD)** usando o GitHub Actions, localizado em `.github/workflows/build-and-push.yml`.
+- `Traefik` centraliza o roteamento de entrada.
+- `users-service` atende login, cadastro e API interna de dados de usuário.
+- `news-service` atende o CRUD de notícias e consulta o `users-service` para nome de autores.
+- `Redis` compartilha a sessão entre os serviços Flask.
+- Cada serviço possui seu próprio banco `MariaDB`.
+- `Prometheus` coleta métricas dos serviços e do Traefik.
+- `Grafana` exibe o dashboard de observabilidade provisionado automaticamente.
 
-Esse workflow é disparado automaticamente a cada `push` para a branch `main` e executa duas tarefas principais:
+## Monitoramento e Observabilidade
 
-1.  **CI (Teste de Build):** O workflow constrói as imagens Docker para o `news-service` e o `users-service`. Se qualquer um dos builds falhar o workflow falha, protegendo o repositório.
-2.  **CD (Entrega/Publicação):** Se os builds forem bem-sucedidos, o workflow faz login no Docker Hub e publica as novas imagens prontas para produção:
-    * `sofii4/blog-news-service:latest`
-    * `sofii4/blog-users-service:latest`
-  
-### 🛡️ Segurança e Manutenção Automática
-Para manter os microsserviços protegidos contra vulnerabilidades:
+O monitoramento foi adicionado com a seguinte estrutura:
 
-* **Dependabot Alerts:** Monitoramento 24/7 de vulnerabilidades em bibliotecas Python e imagens base Docker.
-* **Atualizações Semanais:** O Dependabot verifica semanalmente se existem versões mais recentes das dependências e abre Pull Requests automaticamente.
+- `news-service` e `users-service` registram métricas HTTP automaticamente em `/metrics`.
+- `Prometheus` consulta os jobs `news-service`, `users-service`, `traefik` e o próprio `prometheus`.
+- `Grafana` usa o datasource do Prometheus em `http://prometheus:9090`.
+- O dashboard `Microservices` é carregado automaticamente a partir de `monitoring/grafana/dashboards/microservices_overview.json`.
 
-Isso garante que o Docker Hub sempre tenha a versão mais recente e funcional do código da branch `main`.
+As métricas acompanhadas no dashboard incluem:
 
-## 🛠️ Funcionalidades
+- taxa de requisições por serviço;
+- taxa de erros 4xx/5xx;
+- latência p50/p95;
+- volume de requisições por status code;
+- consumo por endpoint em `news-service` e `users-service`;
+- tráfego do Traefik por rota e status.
 
-### 🎨 Interface & UX
-* **Design Moderno e Responsivo:** Interface construída com **TailwindCSS**, garantindo adaptação perfeita para mobile e desktop.
-* **Dark Mode:** Suporte completo a tema escuro/claro com persistência de preferência do usuário via LocalStorage.
-* **Interatividade:** Animações fluidas nos cards, modais para leitura de notícias e feedback visual em formulários.
+## Automação com GitHub Actions
 
-### ⚙️ Backend & Arquitetura
-* **Arquitetura de Microserviços:** Dois serviços Flask independentes (`users-service` e `news-service`).
-* **Autenticação de Usuário:** Registro e login completos, com senhas hasheadas (Bcrypt).
-* **Gerenciamento de Sessão:** Sessões compartilhadas entre os dois serviços usando **Redis**.
-* **Proxy Reverso:** **Traefik** gerencia todo o tráfego de entrada, roteando para o serviço correto.
-* **CRUD de Notícias:** Usuários podem criar, editar e deletar seus próprios posts.
-* **Sistema de Permissão:**
-    * **Usuário normal:** Só pode editar/deletar os posts que criou.
-    * **Superusuário (ID 1):** Pode editar/deletar *qualquer* post.
-* **API Interna:** O `news-service` consome uma API do `users-service` para buscar os nomes dos autores dos posts.
-* **100% Containerizado:** Toda a arquitetura (Traefik, 2x Flask, 2x MariaDB, 1x Redis) é orquestrada com Docker Compose.
+O projeto possui um pipeline de **Integração Contínua (CI)** e **Entrega Contínua (CD)** em `.github/workflows/build-and-push.yml`.
 
-## ⚙️ Tecnologias Utilizadas
+Esse workflow é executado a cada `push` na branch `main` e faz duas etapas principais:
 
-#### Front-end
-* **TailwindCSS** (Estilização Utility-First)
-* **HTML5 / Jinja2** (Templates)
-* **JavaScript** (Lógica de Modais e Dark Mode)
+1. Constrói as imagens Docker do `news-service` e do `users-service`.
+2. Publica as imagens no Docker Hub quando o build passa com sucesso:
+   - `sofii4/blog-news-service:latest`
+   - `sofii4/blog-users-service:latest`
 
-#### Back-end (Framework & Servidor)
-* **Python 3** / **Flask** / **Gunicorn**
+### Segurança e manutenção automática
 
-#### Arquitetura & Orquestração
-* **Docker** & **Docker Compose**
-* **Traefik** (Proxy Reverso)
+- Dependabot monitora vulnerabilidades em dependências Python e imagens base Docker.
+- Atualizações semanais são abertas automaticamente quando há versões novas disponíveis.
 
-#### Banco de Dados & Sessões
-* **MariaDB** (Duas instâncias separadas)
-* **Redis** (Para o cache de sessão compartilhado)
+## Funcionalidades
 
-## 📋 Requisitos do Sistema
+### Interface e UX
 
-- **Docker:** v20.10+
-- **Docker Compose:** v1.29+
-- **RAM:** Mínimo 2GB disponível
-- **Espaço em disco:** ~3GB para todas as imagens
-- **Portas disponíveis:** 8000, 8080
+- Interface responsiva com `TailwindCSS`.
+- Tema escuro/claro com persistência via `LocalStorage`.
+- Modais, feedback visual e animações nos cards de notícias.
 
+### Backend e arquitetura
 
-## 🔌Como Executar o Projeto
+- Dois serviços Flask independentes: `users-service` e `news-service`.
+- Autenticação com senhas hasheadas usando `Bcrypt`.
+- Sessões compartilhadas entre os serviços usando `Redis`.
+- Proxy reverso com `Traefik`.
+- CRUD de notícias com controle de permissão por usuário.
+- API interna para buscar dados de autores no `users-service`.
+- Monitoramento com `Prometheus` e dashboards no `Grafana`.
+- Toda a arquitetura é orquestrada com Docker Compose.
 
-Esse projeto possui dois modos de execução: **Desenvolvimento** (modificar o código) e **Produção** (para rodar a aplicação em um servidor usando as imagens prontas).
+## Tecnologias Utilizadas
 
-### 1.  Modo de Desenvolvimento
+### Front-end
 
-Esse modo usa o `docker-compose.yml` padrão. Ele **constrói** as imagens localmente e usa "hot-reload" (reinicia o app quando você salva o código).
+- `TailwindCSS`
+- `HTML5` / `Jinja2`
+- `JavaScript`
 
-1.  **Clone o Repositório**
-    ```bash
-    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
-    cd blog-microservices-docker
-    ```
+### Back-end
 
-2.  **Crie o Arquivo de Ambiente (`.env`)**
+- `Python 3`
+- `Flask`
+- `Gunicorn`
 
-    Crie um arquivo chamado `.env` na raiz do projeto. Este arquivo é **ignorado** pelo Git (`.gitignore`) e guarda seus segredos. Use o `.env.example` como modelo ou cole o conteúdo abaixo, substituindo as senhas:
+### Observabilidade
 
-    ```.env
-    # Configuração do Flask (Mude DEBUG para 0 em produção)
-    FLASK_APP=run.py
-    FLASK_DEBUG=1
-    SECRET_KEY=sua-chave-secreta-flask-super-forte-12345
+- `Prometheus`
+- `Grafana`
+- `prometheus-flask-exporter`
 
-    # Configuração do Redis
-    SESSION_TYPE=redis
-    SESSION_REDIS_URL=redis://redis-sessions:6379/0
+### Orquestração e infraestrutura
 
-    # --- Banco de Dados de Usuários ---
-    USERS_DB_ROOT_PASSWORD=SuaSenhaROOTSuperForte123
-    USERS_DB_DATABASE=users_db
-    USERS_DB_USER=users_user
-    USERS_DB_PASSWORD=SuaSenhaDeUsuarioForte456
+- `Docker`
+- `Docker Compose`
+- `Traefik`
 
-    # --- Banco de Dados de Notícias ---
-    NEWS_DB_ROOT_PASSWORD=OutraSenhaROOTSuperForte789
-    NEWS_DB_DATABASE=noticias_db
-    NEWS_DB_USER=noticias_user
-    NEWS_DB_PASSWORD=OutraSenhaDeUsuarioForte101
-    ```
+### Banco de dados e sessão
 
-3.  **Construa e Inicie os Containers**
+- `MariaDB`
+- `Redis`
 
-    No seu terminal, na raiz do projeto, execute:
-    ```bash
-    docker compose up --build
-    ```
+## Requisitos do Sistema
 
-4.  **Acesse a Aplicação (Desenvolvimento)**
-    * **Página de Registro:** `http://localhost:8000/cadastro/register`
-    * **Página de Login:** `http://localhost:8000/cadastro/login`
-    * **Página Inicial (Notícias):** `http://localhost:8000/noticias/`
-    * **Dashboard do Traefik:** `http://localhost:8080/`
+- Docker v20.10+
+- Docker Compose v1.29+
+- Pelo menos 2 GB de RAM disponível
+- Cerca de 3 GB livres em disco para imagens e volumes
+- Portas disponíveis: `8000`, `8080`, `9090`, `3000`
 
-5.  **Parando a Aplicação**
-    Pressione `Ctrl+C` no terminal, ou (de outro terminal) rode `docker compose down`.
+## Variáveis de Ambiente
 
-### 2.  Modo de Produção
+Crie um arquivo `.env` na raiz do projeto usando `.env.example` como base. Além das credenciais dos bancos e da chave secreta do Flask, o arquivo agora inclui variáveis para o Grafana.
 
-Este modo usa o `docker-compose.prod.yml`. Ele **baixa** as imagens prontas do Docker Hub (que o GitHub Actions criou).
+Principais variáveis:
 
-1.  **Clone o Repositório**
-    ```bash
-    git clone [https://github.com/sofii4/blog-microservices-docker.git](https://github.com/sofii4/blog-microservices-docker.git)
-    cd blog-microservices-docker
-    ```
+- `FLASK_APP`
+- `FLASK_DEBUG`
+- `SECRET_KEY`
+- `SESSION_TYPE`
+- `SESSION_REDIS_URL`
+- `USERS_DB_ROOT_PASSWORD`
+- `USERS_DB_DATABASE`
+- `USERS_DB_USER`
+- `USERS_DB_PASSWORD`
+- `NEWS_DB_ROOT_PASSWORD`
+- `NEWS_DB_DATABASE`
+- `NEWS_DB_USER`
+- `NEWS_DB_PASSWORD`
+- `USERS_SERVICE_URL`
+- `GRAFANA_ADMIN_USER`
+- `GRAFANA_ADMIN_PASSWORD`
 
-2.  **Crie o Arquivo de Ambiente (`.env`)**
+## Como Executar o Projeto
 
-    Siga o **"Passo 1"** da seção anterior para criar o arquivo `.env` **completo**. O arquivo de produção precisa de *todas* as variáveis (incluindo `USERS_DB_NAME`, `USERS_DB_USERNAME`, etc.) para que os bancos de dados iniciem corretamente.
+O projeto possui dois modos de execução: **Desenvolvimento** e **Produção**.
 
-3.  **Inicie os Containers (Produção)**
+### 1. Modo de Desenvolvimento
 
-    Suba os containers:
-    ```bash
-    docker compose -f docker-compose.prod.yml up -d
-    ```
-    *(O `-d` inicia em modo "detached", ou segundo plano).*
+Esse modo usa `docker-compose.yml`. Ele constrói as imagens localmente, ativa hot-reload e sobe também Prometheus e Grafana.
 
+1. Clone o repositório.
 
-4.  **Acesse a Aplicação (Produção)**
-
-    O modo de produção usa a porta 8000 padrão:
-    * **Página Inicial (Notícias):** `http://localhost:8000/noticias/`
-    * **Página de Cadastro:** `http://localhost:8000/cadastro/register`
-    * **Dashboard do Traefik:** `http://localhost:8080/`
-
-    (Nota: Se estiver usando uma VM em modo NAT com redirecionamento de portas (ex: 8000 -> 80), você deve acessar pela porta do hospedeiro, como: `http://localhost:8000/noticias/`)
-
-5.  **Parando a Aplicação (Produção)**
-
-    Para parar e remover os volumes:
-
-    ```bash
-    docker compose -f docker-compose.prod.yml down --volumes
-    ```
-
-
-## 📚 Estrutura do Projeto
-
+```bash
+git clone https://github.com/sofii4/blog-microservices-docker.git
+cd blog-microservices-docker
 ```
+
+2. Crie o arquivo `.env` na raiz do projeto.
+
+Use o conteúdo de `.env.example` como base. Se preferir definir manualmente, siga a estrutura abaixo:
+
+```env
+FLASK_APP=run.py
+FLASK_DEBUG=1
+SECRET_KEY=sua-chave-secreta-flask-super-forte-12345
+
+SESSION_TYPE=redis
+SESSION_REDIS_URL=redis://redis-sessions:6379/0
+
+USERS_DB_ROOT_PASSWORD=SuaSenhaROOTSuperForte123
+USERS_DB_DATABASE=users_db
+USERS_DB_USER=users_user
+USERS_DB_PASSWORD=SuaSenhaDeUsuarioForte456
+
+NEWS_DB_ROOT_PASSWORD=OutraSenhaROOTSuperForte789
+NEWS_DB_DATABASE=noticias_db
+NEWS_DB_USER=noticias_user
+NEWS_DB_PASSWORD=OutraSenhaDeUsuarioForte101
+
+USERS_SERVICE_URL=http://users-service:8000
+
+GRAFANA_ADMIN_USER=admin
+GRAFANA_ADMIN_PASSWORD=admin
+```
+
+3. Suba os containers.
+
+```bash
+docker compose up --build
+```
+
+4. Acesse os serviços.
+
+- Aplicação principal: `http://localhost:8000/noticias/`
+- Cadastro: `http://localhost:8000/cadastro/register`
+- Login: `http://localhost:8000/cadastro/login`
+- Dashboard do Traefik: `http://localhost:8080/`
+- Prometheus: `http://localhost:9090/`
+- Grafana: `http://localhost:3000/`
+
+O Grafana usa `admin` / `admin` por padrão, a menos que você sobrescreva `GRAFANA_ADMIN_USER` e `GRAFANA_ADMIN_PASSWORD` no `.env`.
+
+5. Pare a aplicação.
+
+```bash
+docker compose down
+```
+
+### 2. Modo de Produção
+
+Esse modo usa `docker-compose.prod.yml` e baixa as imagens publicadas no Docker Hub.
+
+1. Clone o repositório e crie o `.env` como no modo de desenvolvimento.
+
+2. Inicie os containers.
+
+```bash
+docker compose -f docker-compose.prod.yml up -d
+```
+
+3. Acesse os serviços.
+
+- Aplicação principal: `http://localhost:8000/noticias/`
+- Cadastro: `http://localhost:8000/cadastro/register`
+- Login: `http://localhost:8000/cadastro/login`
+- Dashboard do Traefik: `http://localhost:8080/`
+- Prometheus: `http://localhost:9090/`
+- Grafana: `http://localhost:3000/`
+
+O Grafana usa `admin` / `admin` por padrão, a menos que você sobrescreva `GRAFANA_ADMIN_USER` e `GRAFANA_ADMIN_PASSWORD` no `.env`.
+
+4. Pare a aplicação e remova os volumes.
+
+```bash
+docker compose -f docker-compose.prod.yml down --volumes
+```
+
+## Estrutura do Projeto
+
+```text
 .
-├── news_service/          # News Service (Flask)
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── models.py      # News model
-│   │   ├── routes.py      # CRUD routes
-│   │   ├── config.py      # Configuration
-│   │   ├── templates/     # Jinja2 templates
-│   │   └── static/
-│   │       └── uploads/   # News images
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── monitoring/
+│   ├── prometheus/
+│   │   └── prometheus.yml
+│   └── grafana/
+│       ├── dashboards/
+│       │   └── microservices_overview.json
+│       └── provisioning/
+│           ├── dashboards/
+│           │   └── dashboards.yml
+│           └── datasources/
+│               └── prometheus.yml
+├── news_service/
 │   ├── Dockerfile
-│   └── requirements.txt
-│
-├── users_service/         # Users Service (Flask)
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── models.py      # User model
-│   │   ├── auth_routes.py # Login/Register
-│   │   ├── api_routes.py  # API for user data
-│   │   ├── config.py
-│   │   └── templates/
+│   ├── entrypoint.sh
+│   ├── requirements.txt
+│   ├── run.py
+│   └── app/
+│       ├── __init__.py
+│       ├── config.py
+│       ├── models.py
+│       ├── routes.py
+│       ├── static/
+│       │   └── uploads/
+│       └── templates/
+│           ├── base.html
+│           ├── criar_noticia.html
+│           ├── edit_noticia.html
+│           └── index.html
+├── users_service/
 │   ├── Dockerfile
-│   └── requirements.txt
-│
-├── docker-compose.yml     # Development configuration
-├── docker-compose.prod.yml # Production configuration
-├── .env.example           # Environment variables template
-└── README.md
+│   ├── requirements.txt
+│   ├── run.py
+│   └── app/
+│       ├── __init__.py
+│       ├── api_routes.py
+│       ├── auth_routes.py
+│       ├── config.py
+│       ├── models.py
+│       ├── static/
+│       └── templates/
+│           ├── base.html
+│           ├── login.html
+│           └── register.html
+├── .env.example
+├── README.md
+└── troubleshooting.md
 ```
 
+## Arquitetura Interna
 
-## 🏗️ Arquitetura Interna
-
-```
+```text
 Client (Browser)
     ↓
-Traefik (Reverse Proxy on port 80/8000)
+Traefik (Reverse Proxy on port 8000/8080)
     ├── /cadastro → users-service:8000
     ├── /api → users-service:8000
     └── /noticias → news-service:8000
          ↓
-    news-service communicates with users-service via internal HTTP
+    news-service comunica com users-service via HTTP interno
          ↓
-    Both share session via Redis
+    Ambos compartilham sessão via Redis
          ↓
-    Each service has its own MariaDB database
+    Cada serviço possui seu próprio MariaDB
+         ↓
+    Prometheus coleta métricas em /metrics e Traefik expõe métricas adicionais
+         ↓
+    Grafana exibe o dashboard provisionado automaticamente
 ```
+
+## Troubleshooting Rápido
+
+- Se o banco não subir, confira os valores do `.env` e rode `docker compose ps`.
+- Se o `news-service` não encontrar o `users-service`, verifique se ambos estão na mesma rede `proxy-net`.
+- Se Grafana abrir sem dados, confirme se o Prometheus está acessível em `http://prometheus:9090` dentro da rede Docker.
+- Se a porta `8000`, `8080`, `9090` ou `3000` já estiver em uso, libere a porta ou ajuste o mapeamento no compose.
 
 ---
 
