@@ -7,7 +7,7 @@ Flask-Migrate==4.1.0
 
 # Sessões (Para LER a sessão criada pelo users-service)
 Flask-Session==0.8.0
-redis==8.0.1
+redis==8.1.0
 
 # Para fazer a chamada de API interna para o users-service
 requests==2.34.2
